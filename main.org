@@ -1,0 +1,452 @@
+#+TITLE:       如果我们的语言是威士忌——函数式编程初窥
+#+AUTHOR:      Xu Sheng
+#+EMAIL:       sheng.xu@tongdun.net
+#+DATE:        2020-06-01
+
+* Java函数式编程
+
+  March 18, 2014
+  
+  Java Programming Language
+  1. Lambda Expressions, a new language feature, has been introduced in this release. They enable you to treat functionality as a method argument, or code as data. Lambda expressions let you express instances of single-method interfaces (referred to as functional interfaces) more compactly.
+  2. Method references provide easy-to-read lambda expressions for methods that already have a name.
+
+  Collections
+  1. Classes in the new java.util.stream package provide a Stream API to support functional-style operations on streams of elements. The Stream API is integrated into the Collections API, which enables bulk operations on collections, such as sequential or parallel map-reduce transformations.
+
+** stream
+   
+   #+begin_src java
+
+   #+end_src
+
+** Optional
+
+   #+begin_src java
+   #+end_src
+
+** Working with Resources
+
+** Optimizing Recursions
+
+*** Tail-Call Optimization (TCO)
+
+    #+begin_src c
+    #include <stdio.h>
+
+    int even(int n);
+    int odd(int n);
+
+    int even(int n) {
+      if (n == 0) {
+        return 1;
+      }
+      return odd(n - 1);
+    }
+
+    int odd(int n) {
+      if (n == 0) {
+        return 0;
+      }
+      return even(n - 1);
+    }
+
+    int main() {
+      printf("%d", even(1000000));
+    }
+    #+end_src
+
+    #+begin_src text
+    gcc main.c && ./a.out
+    [1]    79338 segmentation fault  ./a.out
+
+    gcc -O2 main.c && ./a.out
+    1
+    #+end_src
+
+*** Java does not provide Tail-Call Optimization (TCO)
+
+    #+begin_src java
+    package org.xusheng.quicktest.recursion;
+
+    public interface Naive {
+        static boolean even(int n) {
+            if (n == 0) {
+                return true;
+            }
+            return odd(n - 1);
+        }
+
+        static boolean odd(int n) {
+            if (n == 0) {
+                return false;
+            }
+            return even(n - 1);
+        }
+
+        static void main(String[] args) {
+            System.out.println(even(100000));
+        }
+    }
+    #+end_src
+    
+*** Trampolines
+
+    #+begin_src java
+    package org.xusheng.quicktest.recursion;
+
+    import java.util.stream.Stream;
+
+    import static org.xusheng.quicktest.recursion.Trampolines.TailCalls.call;
+    import static org.xusheng.quicktest.recursion.Trampolines.TailCalls.done;
+
+    public interface Trampolines {
+
+        @FunctionalInterface
+        interface TailCall<T> {
+
+            TailCall<T> apply();
+
+            default boolean isComplete() {
+                return false;
+            }
+
+            default T result() {
+                throw new Error("not implemented");
+            }
+
+            default T invoke() {
+                return Stream.iterate(this, TailCall::apply)
+                    .filter(TailCall::isComplete)
+                    .findFirst()
+                    .get()
+                    .result();
+            }
+        }
+
+        class TailCalls {
+            public static <T> TailCall<T> call(final TailCall<T> nextCall) {
+                return nextCall;
+            }
+
+            public static <T> TailCall<T> done(final T value) {
+                return new TailCall<T>() {
+                    @Override
+                    public boolean isComplete() {
+                        return true;
+                    }
+
+                    @Override
+                    public T result() {
+                        return value;
+                    }
+
+                    @Override
+                    public TailCall<T> apply() {
+                        throw new Error("not implemented");
+                    }
+                };
+            }
+        }
+
+        static TailCall<Boolean> evenRec(final int number) {
+            if (number == 0) {
+                return done(true);
+            }
+            return call(() -> oddRec(number - 1));
+        }
+
+        static TailCall<Boolean> oddRec(final int number) {
+            if (number == 0) {
+                return done(false);
+            }
+            return call(() -> evenRec(number - 1));
+        }
+
+        static boolean even(final int number) {
+            return evenRec(number).invoke();
+        }
+
+        static void main(String[] args) {
+            System.out.println(even(100000));
+        }
+
+    }
+    #+end_src
+
+* Haskell
+
+  [[./imgs/haskell-logo.svg]]
+  An advanced, purely functional programming language
+
+** 关于Haskell的段子
+*** how to learn Haskell
+
+    #+ATTR_ORG: :width 1000
+    [[./imgs/howtolearnhaskell.png]]
+   
+*** learning curves for different programming languages
+
+    #+ATTR_ORG: :width 1200
+    [[./imgs/learningcurve.jpg]]
+
+*** code written in Haskell is guaranteed to have no side effects
+
+    [[./imgs/haskell_2x.png]]
+
+*** my own jokes
+    
+    我大概看了这本书十年
+    
+    [[./imgs/rwh-200.jpg]]
+
+
+** pure function
+   在程序设计中，若一个函数符合以下要求，则它可能被认为是纯函数：
+
+   1. 此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出无关。
+   2. 该函数不能有语义上可观察的函数副作用，诸如“触发事件”，使输出设备输出，或更改输出值以外物件的内容等。
+
+   #+begin_src haskell
+   double :: Int -> Int
+   double i = i + i
+   #+end_src      
+   
+** immutable data
+
+   #+begin_src haskell
+   data Person = Person { firstName :: String
+                        , lastName :: String
+                        } deriving (Show)
+
+   p1 = Person { firstName = "Shane", lastName = "Xu" }
+
+   p2 = p1 { firstName = "Sheng" }
+   #+end_src
+   
+
+** first-class function
+
+   #+begin_src haskell
+   plus :: Int -> Int -> Int
+   plus a b = a + b
+
+   plus1 :: Int -> Int
+   plus1 = plus 1
+
+   map plus1 [1,2,3]
+   #+end_src
+
+** lazy
+
+   #+begin_src haskell
+   fib = 1 : 1 : [ a+b | (a,b) <- zip fib (tail fib) ]
+   #+end_src
+
+** handle side effect
+
+   #+begin_src haskell
+   hello :: String -> IO ()
+   hello who = putStrLn ("Hello, " ++ who ++ "!")
+
+   main :: IO ()
+   main = hello "World"
+   #+end_src
+
+** Monad, Functor, Applicative
+
+*** Applicative
+
+    #+begin_src haskell
+    class (Functor f) => Applicative f where
+        pure  :: a -> f a
+        (<*>) :: f (a -> b) -> f a -> f b'
+    #+end_src
+
+*** Functor
+    
+    #+begin_src haskell
+    class Functor f where
+        fmap :: (a -> b) -> f a -> f b
+    #+end_src
+
+*** Monad
+    
+    #+begin_src haskell
+    class Monad m where
+        (>>=)  :: m a -> (a -> m b) -> m b
+        (>>)   :: m a ->  m b       -> m b
+        return ::   a               -> m a
+        fail   :: String -> m a
+    #+end_src
+
+**** Maybe is a Monad
+
+     #+begin_src haskell
+     Just 1
+       >> return 2
+       >>= \t -> return (t+1)
+     #+end_src
+
+**** IO is a Monad
+
+     #+begin_src haskell
+     putStrLn "Who are you?"
+       >> getLine
+       >>= \name -> putStrLn ("Hello, " ++ name ++ "!")
+     #+end_src
+
+* Haxl
+  
+  Haxl is a Haskell library that simplifies access to remote data, such as databases or web-based services. Haxl can automatically
+
+  1. batch multiple requests to the same data source,
+  2. request data from multiple data sources concurrently,
+  3. cache previous requests,
+  4. memoize computations.
+     
+  [[http://simonmar.github.io/bib/papers/haxl-icfp14.pdf][There is no Fork: An Abstraction for Efficient, Concurrent, and Concise Data Access]]
+
+** make a plain
+   
+   #+begin_src dot :file ./imgs/deps.png :cmdline -Kdot -Tpng
+   digraph G {
+     "A" -> "B"
+     "A" -> "C"
+     "B" -> "D"
+     "B" -> "E"
+     "C" -> "F"
+     "C" -> "E"
+   }
+   #+end_src
+
+   #+RESULTS:
+   [[file:./imgs/deps.png]]
+
+   #+begin_src text
+   [D, E, F] --> [B, C] --> A
+   #+end_src
+
+   #+begin_src text
+   [D, E] -> [F] --> [B, C] --> A
+   #+end_src
+
+** scala fetch example
+
+   #+begin_src scala
+   package org.xusheng.scalatest
+
+   import cats.data.NonEmptyList
+   import cats.effect._
+   import cats.instances.list._
+   import cats.syntax.all._
+   import fetch._
+
+   object Sample {
+     type NodeName = String
+
+     case class Node(name: NodeName)
+
+     case class Dep(name: NodeName, deps: List[NodeName])
+
+     def latency[F[_] : Concurrent](msg: String): F[Unit] = for {
+       _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
+       _ <- Sync[F].delay(Thread.sleep(1000))
+       _ <- Sync[F].delay(println(s"<-- [${Thread.currentThread.getId}] $msg"))
+     } yield ()
+
+     val nodeDatabase: Map[NodeName, Node] = Map(
+       "A" -> Node("A"),
+       "B" -> Node("B"),
+       "C" -> Node("C"),
+       "D" -> Node("D"),
+       "E" -> Node("E"),
+       "F" -> Node("F")
+     )
+
+     object Nodes extends Data[NodeName, Node] {
+       def name = "Nodes"
+
+       def source[F[_] : ConcurrentEffect]: DataSource[F, NodeName, Node] = new DataSource[F, NodeName, Node] {
+         override def data = Nodes
+
+         override def CF = ConcurrentEffect[F]
+
+         override def fetch(id: NodeName): F[Option[Node]] =
+           latency[F](s"One Node $id") >> CF.pure(nodeDatabase.get(id))
+
+         override def maxBatchSize: Option[Int] = Some(2)
+
+         override def batchExecution: BatchExecution = InParallel
+
+         override def batch(ids: NonEmptyList[NodeName]): F[Map[NodeName, Node]] =
+           latency[F](s"Batch Nodes $ids") >> CF.pure(nodeDatabase.filterKeys(ids.toList.toSet))
+       }
+     }
+
+     def getNode[F[_] : ConcurrentEffect](id: NodeName): Fetch[F, Node] =
+       Fetch(id, Nodes.source)
+
+     def getGraph[F[_] : ConcurrentEffect](id: NodeName, deps: Map[NodeName, List[NodeName]]): Fetch[F, Node] =
+       for {
+         _ <- deps.get(id).map {
+           ids => ids.traverse(i => getGraph(i, deps))
+         }.getOrElse(Fetch.pure[F, List[Node]](List.empty))
+         n <- getNode(id)
+       } yield n
+
+     def main(args: Array[String]): Unit = {
+       import java.util.concurrent._
+
+       import scala.concurrent.ExecutionContext
+       import scala.concurrent.duration._
+
+       val executor = new ScheduledThreadPoolExecutor(4)
+       val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+
+       implicit val timer: Timer[IO] = IO.timer(executionContext)
+       implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
+
+
+       val deps = Map(
+         "A" -> List("B", "C"),
+         "B" -> List("D", "E"),
+         "C" -> List("E", "F"),
+       )
+
+       Fetch.run[IO](getGraph("A", deps)).unsafeRunTimed(10.seconds)
+
+       executor.shutdown()
+     }
+   }
+   #+end_src
+
+   #+begin_src text
+   --> [20] Batch Nodes NonEmptyList(D, E)
+   --> [21] Batch Nodes NonEmptyList(F)
+   <-- [21] Batch Nodes NonEmptyList(F)
+   <-- [20] Batch Nodes NonEmptyList(D, E)
+   --> [21] Batch Nodes NonEmptyList(B, C)
+   <-- [21] Batch Nodes NonEmptyList(B, C)
+   --> [20] One Node A
+   <-- [20] One Node A
+   #+end_src
+
+** algorithm in java
+
+*** IO
+
+*** Fetch
+
+*** Request
+
+
+* 关于标题
+
+  村上春树这次推出的游记《如果我们的语言是威士忌》中，还配有他夫人阳子拍摄的彩色风景照片40幅，因为游记中所记述的地方都是两人共同游历的。这些照片使村上春树的文字更增添了一分生动美妙的色彩。这对夫妻的搭配真可谓是“珠联壁合”。
+
+  [[file:./imgs/cover.jpg]]
+
+* Q & A
+
+* THANKS
