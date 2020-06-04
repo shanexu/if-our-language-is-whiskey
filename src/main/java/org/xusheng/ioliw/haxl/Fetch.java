@@ -21,7 +21,15 @@ public class Fetch<A> {
         this.unFetch = unFetch;
     }
 
-    public static <R, A> Fetch<A> pure(A a) {
+    public <B> Fetch<B> bind(Function<A, Fetch<B>> f) {
+        return bind(this, f);
+    }
+
+    public <B> Fetch<B> bind(Fetch<B> b) {
+        return bind(this, b);
+    }
+
+    public static <A> Fetch<A> pure(A a) {
         return ret(a);
     }
 
@@ -97,7 +105,7 @@ public class Fetch<A> {
     }
 
     // >>
-    public static <R, A, B> Fetch<B> bind(Fetch<A> a, Fetch<B> b) {
+    public static <A, B> Fetch<B> bind(Fetch<A> a, Fetch<B> b) {
         return bind(a, k -> b);
     }
 
@@ -126,7 +134,7 @@ public class Fetch<A> {
         }
 
         return IO.bind(
-            IO.of(() -> ds.batch(brs.stream().map(BlockedRequest::getRequest).map(Request::getId).collect(Collectors.toList()))),
+            IO.of(() -> ds.batch(brs.stream().map(BlockedRequest::getRequest).distinct().map(Request::getId).collect(Collectors.toList()))),
             results -> IO.mapM_((BlockedRequest<ID, R> br) -> {
                 Request<ID> r = br.getRequest();
                 IORef<FetchStatus<R>> ref = br.getRef();
@@ -150,7 +158,7 @@ public class Fetch<A> {
         });
     }
 
-    public static <R, A, B> Fetch<List<B>> mapM(Function<A, Fetch<B>> f, List<A> l) {
+    public static <A, B> Fetch<List<B>> mapM(Function<A, Fetch<B>> f, List<A> l) {
         BiFunction<A, Fetch<List<B>>, Fetch<List<B>>> cons_f = (x, ys) -> liftA2(
             ListUtils::cons,
             f.apply(x),
@@ -159,7 +167,7 @@ public class Fetch<A> {
         return ListUtils.foldr(cons_f, pure(ListUtils.empty()), l);
     }
 
-    public static <R, A, B, C> Fetch<C> liftA2(BiFunction<A, B, C> f, Fetch<A> a, Fetch<B> b) {
+    public static <A, B, C> Fetch<C> liftA2(BiFunction<A, B, C> f, Fetch<A> a, Fetch<B> b) {
         Function<A, Function<B, C>> a2fbc = x -> (y -> f.apply(x, y));
         return ap(fmap(a2fbc, a), b);
     }
