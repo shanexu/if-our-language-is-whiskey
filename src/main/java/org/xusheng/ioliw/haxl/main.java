@@ -6,8 +6,6 @@ import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.xusheng.ioliw.haxl.Request.User;
-
 public class main {
     public static void main(String[] args) {
         List<Request> l = ListUtils.of(new Request(1L), new Request(2L));
@@ -47,5 +45,32 @@ public class main {
             e.printStackTrace();
         }
         return requests.stream().map(r -> new User(r.getId(), "user" + r.getId())).collect(Collectors.toMap(User::getId, Function.identity()));
+    }
+
+    public static class User {
+        private final Long id;
+        private final String username;
+
+
+        public User(Long id, String username) {
+            this.id = id;
+            this.username = username;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public String getUsername() {
+            return username;
+        }
+
+        @Override
+        public String toString() {
+            return "User{" +
+                "id=" + id +
+                ", username='" + username + '\'' +
+                '}';
+        }
     }
 }

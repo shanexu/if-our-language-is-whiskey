@@ -8,7 +8,6 @@ import java.util.stream.Collectors;
 
 import static org.xusheng.ioliw.haxl.FetchStatus.FetchSuccess;
 import static org.xusheng.ioliw.haxl.FetchStatus.NotFetched;
-import static org.xusheng.ioliw.haxl.Request.User;
 import static org.xusheng.ioliw.haxl.Result.Blocked;
 import static org.xusheng.ioliw.haxl.Result.Done;
 
@@ -135,24 +134,6 @@ public class Fetch<R, A> {
                 return IORef.writeIORef(ref, new FetchSuccess<>(results.get(r.getId())));
             }, brs)
         );
-    }
-
-    private static IO<User> getUser(Request request) {
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return IO.ret(new User(request.getId(), "user" + request.getId()));
-    }
-
-    private static IO<Map<Long, User>> getUsers(List<Request> requests) {
-        try {
-            Thread.sleep(3000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return IO.ret(requests.stream().map(r -> new User(r.getId(), "user" + r.getId())).collect(Collectors.toMap(User::getId, Function.identity())));
     }
 
     public static <R, A> IO<A> runFetch(Fetch<R, A> f, Function<Request, R> fetchOne, Function<List<Request>, Map<Long, R>> fetchBatch) {
