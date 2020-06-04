@@ -107,8 +107,8 @@ public class Fetch<A> {
         return new Fetch<>(IO.bind(IORef.newIORef((FetchStatus<A>) new NotFetched<A>()), box -> {
             BlockedRequest br = new BlockedRequest<>(r, box);
             Fetch<A> cont = new Fetch<>(IO.bind(IORef.readIORef(box), x -> {
-                if (x instanceof FetchStatus.FetchSuccess) {
-                    return IO.ret(new Done<>(((FetchStatus.FetchSuccess<A>) x).getValue()));
+                if (x instanceof FetchSuccess) {
+                    return IO.ret(new Done<>(((FetchSuccess<A>) x).getValue()));
                 }
                 throw new RuntimeException("3");
             }));
