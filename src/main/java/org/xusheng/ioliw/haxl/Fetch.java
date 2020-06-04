@@ -92,7 +92,7 @@ public class Fetch<A> {
                 Blocked<A> blocked = (Blocked<A>) r;
                 List<BlockedRequest> br = blocked.getRequests();
                 Fetch<A> c = blocked.getFetch();
-                return IO.ret(new Blocked<B>(br, Fetch.bind(c, k)));
+                return IO.ret(new Blocked<>(br, Fetch.bind(c, k)));
             }
             throw new RuntimeException("2");
         }));
