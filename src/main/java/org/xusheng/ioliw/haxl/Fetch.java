@@ -27,13 +27,13 @@ public class Fetch<R, A> {
     }
 
     // <$>, fmap
-    public static <R, A, B> Fetch<R, B> fmap(Function<A, B> f, Fetch<R, A> x) {
+    public static <ID, R, A, B> Fetch<R, B> fmap(Function<A, B> f, Fetch<R, A> x) {
         return new Fetch<>(IO.fmap(r -> {
             if (r instanceof Done) {
                 return new Done<>(f.apply(((Done<A>) r).getValue()));
             }
             if (r instanceof Blocked) {
-                Blocked<R, A> blocked = (Blocked<R, A>) r;
+                Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
                 return new Blocked<>(blocked.getRequests(), fmap(f, blocked.getFetch()));
             }
             throw new RuntimeException("1");
@@ -41,7 +41,7 @@ public class Fetch<R, A> {
     }
 
     // <*>
-    public static <R, A, B> Fetch<R, B> ap(Fetch<R, Function<A, B>> f, Fetch<R, A> x) {
+    public static <ID, R, A, B> Fetch<R, B> ap(Fetch<R, Function<A, B>> f, Fetch<R, A> x) {
         return new Fetch<>(IO.bind(f.unFetch, f_ -> IO.bind(x.unFetch, x_ -> {
             if (f_ instanceof Done && x_ instanceof Done) {
                 Function<A, B> g = ((Done<Function<A, B>>) f_).getValue();
@@ -50,26 +50,26 @@ public class Fetch<R, A> {
             }
             if (f_ instanceof Done && x_ instanceof Blocked) {
                 Function<A, B> g = ((Done<Function<A, B>>) f_).getValue();
-                Blocked<R, A> blocked = (Blocked<R, A>) x_;
-                List<BlockedRequest<R>> br = blocked.getRequests();
+                Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) x_;
+                List<BlockedRequest<ID, R>> br = blocked.getRequests();
                 Fetch<R, A> c = blocked.getFetch();
                 return IO.ret(new Blocked<>(br, fmap(g, c)));
             }
             if (f_ instanceof Blocked && x_ instanceof Done) {
-                Blocked<R, Function<A, B>> blocked = (Blocked<R, Function<A, B>>) f_;
-                List<BlockedRequest<R>> br = blocked.getRequests();
+                Blocked<ID, R, Function<A, B>> blocked = (Blocked<ID, R, Function<A, B>>) f_;
+                List<BlockedRequest<ID, R>> br = blocked.getRequests();
                 Fetch<R, Function<A, B>> c = blocked.getFetch();
                 A y = ((Done<A>) x_).getValue();
                 return IO.ret(new Blocked<>(br, ap(c, ret(y))));
             }
             if (f_ instanceof Blocked && x_ instanceof Blocked) {
-                Blocked<R, Function<A, B>> blocked1 = (Blocked<R, Function<A, B>>) f_;
-                Blocked<R, A> blocked2 = (Blocked<R, A>) x_;
-                List<BlockedRequest<R>> br1 = blocked1.getRequests();
+                Blocked<ID, R, Function<A, B>> blocked1 = (Blocked<ID, R, Function<A, B>>) f_;
+                Blocked<ID, R, A> blocked2 = (Blocked<ID, R, A>) x_;
+                List<BlockedRequest<ID, R>> br1 = blocked1.getRequests();
                 Fetch<R, Function<A, B>> c = blocked1.getFetch();
-                List<BlockedRequest<R>> br2 = blocked2.getRequests();
+                List<BlockedRequest<ID, R>> br2 = blocked2.getRequests();
                 Fetch<R, A> d = blocked2.getFetch();
-                List<BlockedRequest<R>> br = ListUtils.concat(br1, br2);
+                List<BlockedRequest<ID, R>> br = ListUtils.concat(br1, br2);
                 return IO.ret(new Blocked<>(br, ap(c, d)));
             }
             throw new RuntimeException("neither Blocked nor done");
@@ -82,14 +82,14 @@ public class Fetch<R, A> {
     }
 
     // >>=
-    public static <R, A, B> Fetch<R, B> bind(Fetch<R, A> m, Function<A, Fetch<R, B>> k) {
+    public static <ID, R, A, B> Fetch<R, B> bind(Fetch<R, A> m, Function<A, Fetch<R, B>> k) {
         return new Fetch<>(IO.bind(m.unFetch, r -> {
             if (r instanceof Done) {
                 return k.apply(((Done<A>) r).getValue()).unFetch;
             }
             if (r instanceof Blocked) {
-                Blocked<R, A> blocked = (Blocked<R, A>) r;
-                List<BlockedRequest<R>> br = blocked.getRequests();
+                Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
+                List<BlockedRequest<ID, R>> br = blocked.getRequests();
                 Fetch<R, A> c = blocked.getFetch();
                 return IO.ret(new Blocked<>(br, Fetch.bind(c, k)));
             }
@@ -102,9 +102,9 @@ public class Fetch<R, A> {
         return bind(a, k -> b);
     }
 
-    public static <R, A> Fetch<R, A> dataFetch(Request r) {
+    public static <ID, R, A> Fetch<R, A> dataFetch(Request r) {
         return new Fetch<>(IO.bind(IORef.newIORef((FetchStatus<R>) new NotFetched<R>()), box -> {
-            BlockedRequest<R> br = new BlockedRequest<>(r, box);
+            BlockedRequest<ID, R> br = new BlockedRequest<>(r, box);
             Fetch<R, A> cont = new Fetch<>(IO.bind(IORef.readIORef(box), x -> {
                 if (x instanceof FetchSuccess) {
                     return IO.ret(new Done<>(((FetchSuccess<A>) x).getValue()));
@@ -116,34 +116,34 @@ public class Fetch<R, A> {
     }
 
     // fetch remote resource
-    public static <R> IO<Void> fetch(List<BlockedRequest<R>> brs, Function<Request, R> fetchOne, Function<List<Request>, Map<Long, R>> fetchBatch) {
+    public static <ID, R> IO<Void> fetch(List<BlockedRequest<ID, R>> brs, Function<Request<ID>, R> fetchOne, Function<List<Request<ID>>, Map<ID, R>> fetchBatch) {
         if (brs.isEmpty()) {
             return IO.ret(null);
         }
 
         if (brs.size() == 1) {
-            BlockedRequest<R> first = brs.get(0);
+            BlockedRequest<ID, R> first = brs.get(0);
             return IO.bind(IO.of(() -> fetchOne.apply(first.getRequest())), user -> IORef.writeIORef(first.getRef(), new FetchSuccess<>(user)));
         }
 
         return IO.bind(
             IO.of(() -> fetchBatch.apply(brs.stream().map(BlockedRequest::getRequest).collect(Collectors.toList()))),
-            results -> IO.mapM_((BlockedRequest<R> br) -> {
-                Request r = br.getRequest();
+            results -> IO.mapM_((BlockedRequest<ID, R> br) -> {
+                Request<ID> r = br.getRequest();
                 IORef<FetchStatus<R>> ref = br.getRef();
                 return IORef.writeIORef(ref, new FetchSuccess<>(results.get(r.getId())));
             }, brs)
         );
     }
 
-    public static <R, A> IO<A> runFetch(Fetch<R, A> f, Function<Request, R> fetchOne, Function<List<Request>, Map<Long, R>> fetchBatch) {
+    public static <ID, R, A> IO<A> runFetch(Fetch<R, A> f, Function<Request<ID>, R> fetchOne, Function<List<Request<ID>>, Map<ID, R>> fetchBatch) {
         return IO.bind(f.getUnFetch(), r -> {
             if (r instanceof Done) {
                 return IO.ret(((Done<A>) r).getValue());
             }
             if (r instanceof Blocked) {
-                Blocked<R, A> blocked = (Blocked<R, A>) r;
-                List<BlockedRequest<R>> br = blocked.getRequests();
+                Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
+                List<BlockedRequest<ID, R>> br = blocked.getRequests();
                 Fetch<R, A> cont = blocked.getFetch();
                 return IO.bind(fetch(br, fetchOne, fetchBatch), x -> runFetch(cont, fetchOne, fetchBatch));
             }

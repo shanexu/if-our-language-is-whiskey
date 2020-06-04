@@ -1,14 +1,14 @@
 package org.xusheng.ioliw.haxl;
 
-public class Request {
+public class Request<ID> {
 
-    private final Long id;
+    private final ID id;
 
-    public Long getId() {
+    public ID getId() {
         return id;
     }
 
-    public Request(Long id) {
+    public Request(ID id) {
         this.id = id;
     }
 

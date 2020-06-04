@@ -29,7 +29,7 @@ public class main {
         return System.nanoTime() - start;
     }
 
-    private static User getUser(Request request) {
+    private static User getUser(Request<Long> request) {
         try {
             Thread.sleep(2000L);
         } catch (InterruptedException e) {
@@ -38,7 +38,7 @@ public class main {
         return new User(request.getId(), "user" + request.getId());
     }
 
-    private static Map<Long, User> getUsers(List<Request> requests) {
+    private static Map<Long, User> getUsers(List<Request<Long>> requests) {
         try {
             Thread.sleep(3000L);
         } catch (InterruptedException e) {
