@@ -11,35 +11,39 @@ import static org.jooq.lambda.Sneaky.runnable;
 
 public class main {
     public static void main(String[] args) {
-        List<Request<Long>> l = ListUtils.of(new Request<>(1L), new Request<>(2L));
+        List<Request<String>> l = ListUtils.of(new Request<>("A"), new Request<>("B"));
         Fetch<Node, List<Node>> batchFetch = Fetch.mapM(Fetch::dataFetch, l);
         Fetch<Node, List<Node>> seqFetch = Fetch.bind(
-            Fetch.dataFetch(new Request<>(1L)),
-            (Node u1) -> Fetch.fmap((Node u2) -> ListUtils.of(u1, u2), Fetch.dataFetch(new Request(u1.getId() + 1)))
+            Fetch.dataFetch(new Request<>("A")),
+            (Node u1) -> Fetch.fmap((Node u2) -> ListUtils.of(u1, u2), Fetch.dataFetch(new Request<>("B")))
         );
 
-        DataSource<Long, Node> ds = new DataSource<Long, Node>() {
+        DataSource<String, Node> ds = new DataSource<String, Node>() {
 
-             private final Map<Long, Node> users = ImmutableMap.of(
-                 1L, new Node(1L, "user1"),
-                 2L, new Node(2L, "user2"),
-                 3L, new Node(3L, "user3")
-             );
+             private final Map<String, Node> nodeDatabase =
+                 ImmutableMap.<String, Node>builder()
+                     .put("A", new Node("A"))
+                     .put("B", new Node("B"))
+                     .put("C", new Node("C"))
+                     .put("D", new Node("D"))
+                     .put("E", new Node("E"))
+                     .put("F", new Node("F"))
+                     .build();
 
             @Override
-            public Node fetch(Long id) {
+            public Node fetch(String id) {
                 System.out.println(String.format("--> [%d] One Node %s", Thread.currentThread().getId(), id));
                 runnable(() -> Thread.sleep(2000L)).run();
                 System.out.println(String.format("<-- [%d] One Node %s", Thread.currentThread().getId(), id));
-                return users.get(id);
+                return nodeDatabase.get(id);
             }
 
             @Override
-            public Map<Long, Node> batch(List<Long> ids) {
+            public Map<String, Node> batch(List<String> ids) {
                 System.out.println(String.format("--> [%d] Batch Nodes %s", Thread.currentThread().getId(), ids));
                 runnable(() -> Thread.sleep(3000L)).run();
                 System.out.println(String.format("<-- [%d] Batch Nodes %s", Thread.currentThread().getId(), ids));
-                return ids.stream().distinct().map(users::get).collect(Collectors.toMap(Node::getId, Function.identity()));
+                return ids.stream().distinct().map(nodeDatabase::get).collect(Collectors.toMap(Node::getNodeName, Function.identity()));
             }
         };
 
@@ -54,29 +58,23 @@ public class main {
     }
 
     public static class Node {
-        private final Long id;
-        private final String username;
+        private final String nodeName;
 
-
-        public Node(Long id, String username) {
-            this.id = id;
-            this.username = username;
+        public Node(String nodeName) {
+            this.nodeName = nodeName;
         }
 
-        public Long getId() {
-            return id;
-        }
-
-        public String getUsername() {
-            return username;
+        public String getNodeName() {
+            return nodeName;
         }
 
         @Override
         public String toString() {
-            return "User{" +
-                "id=" + id +
-                ", username='" + username + '\'' +
+            return "Node{" +
+                "nodeName='" + nodeName + '\'' +
                 '}';
         }
     }
+
+
 }
