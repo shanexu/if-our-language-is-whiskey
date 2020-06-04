@@ -12,8 +12,8 @@ import static org.jooq.lambda.Sneaky.runnable;
 public class main {
     public static void main(String[] args) {
         List<Request<String>> l = ListUtils.of(new Request<>("A"), new Request<>("B"));
-        Fetch<Node, List<Node>> batchFetch = Fetch.mapM(Fetch::dataFetch, l);
-        Fetch<Node, List<Node>> seqFetch = Fetch.bind(
+        Fetch<List<Node>> batchFetch = Fetch.mapM(Fetch::dataFetch, l);
+        Fetch<List<Node>> seqFetch = Fetch.bind(
             Fetch.dataFetch(new Request<>("A")),
             (Node u1) -> Fetch.fmap((Node u2) -> ListUtils.of(u1, u2), Fetch.dataFetch(new Request<>("B")))
         );

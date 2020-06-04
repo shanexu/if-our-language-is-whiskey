@@ -17,9 +17,9 @@ public interface Result<A> {
 
     class Blocked<ID, R, A> implements Result<A> {
         private final List<BlockedRequest<ID, R>> requests;
-        private final Fetch<R, A> fetch;
+        private final Fetch<A> fetch;
 
-        public Blocked(List<BlockedRequest<ID, R>> requests, Fetch<R, A> fetch) {
+        public Blocked(List<BlockedRequest<ID, R>> requests, Fetch<A> fetch) {
             this.requests = requests;
             this.fetch = fetch;
         }
@@ -28,7 +28,7 @@ public interface Result<A> {
             return requests;
         }
 
-        public Fetch<R, A> getFetch() {
+        public Fetch<A> getFetch() {
             return fetch;
         }
     }

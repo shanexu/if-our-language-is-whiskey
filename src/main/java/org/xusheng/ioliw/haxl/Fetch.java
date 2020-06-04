@@ -10,7 +10,7 @@ import static org.xusheng.ioliw.haxl.FetchStatus.NotFetched;
 import static org.xusheng.ioliw.haxl.Result.Blocked;
 import static org.xusheng.ioliw.haxl.Result.Done;
 
-public class Fetch<R, A> {
+public class Fetch<A> {
     private final IO<Result<A>> unFetch;
 
     public IO<Result<A>> getUnFetch() {
@@ -21,12 +21,12 @@ public class Fetch<R, A> {
         this.unFetch = unFetch;
     }
 
-    public static <R, A> Fetch<R, A> pure(A a) {
+    public static <R, A> Fetch<A> pure(A a) {
         return ret(a);
     }
 
     // <$>, fmap
-    public static <ID, R, A, B> Fetch<R, B> fmap(Function<A, B> f, Fetch<R, A> x) {
+    public static <ID, R, A, B> Fetch<B> fmap(Function<A, B> f, Fetch<A> x) {
         return new Fetch<>(IO.fmap(r -> {
             if (r instanceof Done) {
                 return new Done<>(f.apply(((Done<A>) r).getValue()));
@@ -40,7 +40,7 @@ public class Fetch<R, A> {
     }
 
     // <*>
-    public static <ID, R, A, B> Fetch<R, B> ap(Fetch<R, Function<A, B>> f, Fetch<R, A> x) {
+    public static <ID, R, A, B> Fetch<B> ap(Fetch<Function<A, B>> f, Fetch<A> x) {
         return new Fetch<>(IO.bind(f.unFetch, f_ -> IO.bind(x.unFetch, x_ -> {
             if (f_ instanceof Done && x_ instanceof Done) {
                 Function<A, B> g = ((Done<Function<A, B>>) f_).getValue();
@@ -51,13 +51,13 @@ public class Fetch<R, A> {
                 Function<A, B> g = ((Done<Function<A, B>>) f_).getValue();
                 Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) x_;
                 List<BlockedRequest<ID, R>> br = blocked.getRequests();
-                Fetch<R, A> c = blocked.getFetch();
+                Fetch<A> c = blocked.getFetch();
                 return IO.ret(new Blocked<>(br, fmap(g, c)));
             }
             if (f_ instanceof Blocked && x_ instanceof Done) {
                 Blocked<ID, R, Function<A, B>> blocked = (Blocked<ID, R, Function<A, B>>) f_;
                 List<BlockedRequest<ID, R>> br = blocked.getRequests();
-                Fetch<R, Function<A, B>> c = blocked.getFetch();
+                Fetch<Function<A, B>> c = blocked.getFetch();
                 A y = ((Done<A>) x_).getValue();
                 return IO.ret(new Blocked<>(br, ap(c, ret(y))));
             }
@@ -65,9 +65,9 @@ public class Fetch<R, A> {
                 Blocked<ID, R, Function<A, B>> blocked1 = (Blocked<ID, R, Function<A, B>>) f_;
                 Blocked<ID, R, A> blocked2 = (Blocked<ID, R, A>) x_;
                 List<BlockedRequest<ID, R>> br1 = blocked1.getRequests();
-                Fetch<R, Function<A, B>> c = blocked1.getFetch();
+                Fetch<Function<A, B>> c = blocked1.getFetch();
                 List<BlockedRequest<ID, R>> br2 = blocked2.getRequests();
-                Fetch<R, A> d = blocked2.getFetch();
+                Fetch<A> d = blocked2.getFetch();
                 List<BlockedRequest<ID, R>> br = ListUtils.concat(br1, br2);
                 return IO.ret(new Blocked<>(br, ap(c, d)));
             }
@@ -76,12 +76,12 @@ public class Fetch<R, A> {
     }
 
     // return
-    public static <R, A> Fetch<R, A> ret(A a) {
+    public static <A> Fetch<A> ret(A a) {
         return new Fetch<>(IO.ret(new Done<>(a)));
     }
 
     // >>=
-    public static <ID, R, A, B> Fetch<R, B> bind(Fetch<R, A> m, Function<A, Fetch<R, B>> k) {
+    public static <ID, R, A, B> Fetch<B> bind(Fetch<A> m, Function<A, Fetch<B>> k) {
         return new Fetch<>(IO.bind(m.unFetch, r -> {
             if (r instanceof Done) {
                 return k.apply(((Done<A>) r).getValue()).unFetch;
@@ -89,7 +89,7 @@ public class Fetch<R, A> {
             if (r instanceof Blocked) {
                 Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
                 List<BlockedRequest<ID, R>> br = blocked.getRequests();
-                Fetch<R, A> c = blocked.getFetch();
+                Fetch<A> c = blocked.getFetch();
                 return IO.ret(new Blocked<>(br, Fetch.bind(c, k)));
             }
             throw new RuntimeException("2");
@@ -97,14 +97,14 @@ public class Fetch<R, A> {
     }
 
     // >>
-    public static <R, A, B> Fetch<R, B> bind(Fetch<R, A> a, Fetch<R, B> b) {
+    public static <R, A, B> Fetch<B> bind(Fetch<A> a, Fetch<B> b) {
         return bind(a, k -> b);
     }
 
-    public static <ID, R, A> Fetch<R, A> dataFetch(Request r) {
+    public static <ID, R, A> Fetch<A> dataFetch(Request<ID> r) {
         return new Fetch<>(IO.bind(IORef.newIORef((FetchStatus<R>) new NotFetched<R>()), box -> {
             BlockedRequest<ID, R> br = new BlockedRequest<>(r, box);
-            Fetch<R, A> cont = new Fetch<>(IO.bind(IORef.readIORef(box), x -> {
+            Fetch<A> cont = new Fetch<>(IO.bind(IORef.readIORef(box), x -> {
                 if (x instanceof FetchSuccess) {
                     return IO.ret(new Done<>(((FetchSuccess<A>) x).getValue()));
                 }
@@ -135,7 +135,7 @@ public class Fetch<R, A> {
         );
     }
 
-    public static <ID, R, A> IO<A> runFetch(Fetch<R, A> f, DataSource<ID, R> ds) {
+    public static <ID, R, A> IO<A> runFetch(Fetch<A> f, DataSource<ID, R> ds) {
         return IO.bind(f.getUnFetch(), r -> {
             if (r instanceof Done) {
                 return IO.ret(((Done<A>) r).getValue());
@@ -143,15 +143,15 @@ public class Fetch<R, A> {
             if (r instanceof Blocked) {
                 Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
                 List<BlockedRequest<ID, R>> br = blocked.getRequests();
-                Fetch<R, A> cont = blocked.getFetch();
+                Fetch<A> cont = blocked.getFetch();
                 return IO.bind(fetch(br, ds), x -> runFetch(cont, ds));
             }
             throw new RuntimeException("4");
         });
     }
 
-    public static <R, A, B> Fetch<R, List<B>> mapM(Function<A, Fetch<R, B>> f, List<A> l) {
-        BiFunction<A, Fetch<R, List<B>>, Fetch<R, List<B>>> cons_f = (x, ys) -> liftA2(
+    public static <R, A, B> Fetch<List<B>> mapM(Function<A, Fetch<B>> f, List<A> l) {
+        BiFunction<A, Fetch<List<B>>, Fetch<List<B>>> cons_f = (x, ys) -> liftA2(
             ListUtils::cons,
             f.apply(x),
             ys
@@ -159,7 +159,7 @@ public class Fetch<R, A> {
         return ListUtils.foldr(cons_f, pure(ListUtils.empty()), l);
     }
 
-    public static <R, A, B, C> Fetch<R, C> liftA2(BiFunction<A, B, C> f, Fetch<R, A> a, Fetch<R, B> b) {
+    public static <R, A, B, C> Fetch<C> liftA2(BiFunction<A, B, C> f, Fetch<A> a, Fetch<B> b) {
         Function<A, Function<B, C>> a2fbc = x -> (y -> f.apply(x, y));
         return ap(fmap(a2fbc, a), b);
     }
