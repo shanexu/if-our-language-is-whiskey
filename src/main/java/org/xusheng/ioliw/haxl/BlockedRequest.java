@@ -1,10 +1,10 @@
 package org.xusheng.ioliw.haxl;
 
-public class BlockedRequest<A> {
+public class BlockedRequest<R> {
     private final Request request;
-    private final IORef<FetchStatus<A>> ref;
+    private final IORef<FetchStatus<R>> ref;
 
-    public BlockedRequest(Request request, IORef<FetchStatus<A>> ref) {
+    public BlockedRequest(Request request, IORef<FetchStatus<R>> ref) {
         this.request = request;
         this.ref = ref;
     }
@@ -13,7 +13,7 @@ public class BlockedRequest<A> {
         return request;
     }
 
-    public IORef<FetchStatus<A>> getRef() {
+    public IORef<FetchStatus<R>> getRef() {
         return ref;
     }
 }

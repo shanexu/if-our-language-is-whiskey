@@ -15,20 +15,20 @@ public interface Result<A> {
         }
     }
 
-    class Blocked<A> implements Result<A> {
-        private List<BlockedRequest> requests;
-        private Fetch<A> fetch;
+    class Blocked<R, A> implements Result<A> {
+        private List<BlockedRequest<R>> requests;
+        private Fetch<R, A> fetch;
 
-        public Blocked(List<BlockedRequest> requests, Fetch<A> fetch) {
+        public Blocked(List<BlockedRequest<R>> requests, Fetch<R, A> fetch) {
             this.requests = requests;
             this.fetch = fetch;
         }
 
-        public List<BlockedRequest> getRequests() {
+        public List<BlockedRequest<R>> getRequests() {
             return requests;
         }
 
-        public Fetch<A> getFetch() {
+        public Fetch<R, A> getFetch() {
             return fetch;
         }
     }
