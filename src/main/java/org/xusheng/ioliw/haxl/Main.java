@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import static org.jooq.lambda.Sneaky.runnable;
 
-public class main {
+public class Main {
     public static void main(String[] args) {
         List<Request<String>> l = ListUtils.of(new Request<>("A"), new Request<>("B"));
         Fetch<List<Node>> batchFetch = Fetch.mapM(Fetch::dataFetch, l);
