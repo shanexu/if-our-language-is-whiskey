@@ -1,58 +1,64 @@
 package org.xusheng.ioliw.haxl;
 
+import com.google.common.collect.ImmutableMap;
+
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static org.jooq.lambda.Sneaky.runnable;
+
 public class main {
     public static void main(String[] args) {
-        List<Request> l = ListUtils.of(new Request(1L), new Request(2L));
-        Fetch<User, List<User>> batchFetch = Fetch.mapM(Fetch::dataFetch, l);
-        Fetch<User, List<User>> seqFetch = Fetch.bind(
-            Fetch.dataFetch(new Request(1L)),
-            (User u1) -> Fetch.fmap((User u2) -> ListUtils.of(u1, u2), Fetch.dataFetch(new Request(u1.getId() + 1)))
+        List<Request<Long>> l = ListUtils.of(new Request<>(1L), new Request<>(2L));
+        Fetch<Node, List<Node>> batchFetch = Fetch.mapM(Fetch::dataFetch, l);
+        Fetch<Node, List<Node>> seqFetch = Fetch.bind(
+            Fetch.dataFetch(new Request<>(1L)),
+            (Node u1) -> Fetch.fmap((Node u2) -> ListUtils.of(u1, u2), Fetch.dataFetch(new Request(u1.getId() + 1)))
         );
 
-        System.out.printf("batchFetch %dms\n", measure(() -> IO.runIO(Fetch.runFetch(batchFetch, main::getUser, main::getUsers))) / 1000000);
-        System.out.printf("seqFetch %dms\n", measure(() -> IO.runIO(Fetch.runFetch(seqFetch, main::getUser, main::getUsers))) / 1000000);
+        DataSource<Long, Node> ds = new DataSource<Long, Node>() {
+
+             private final Map<Long, Node> users = ImmutableMap.of(
+                 1L, new Node(1L, "user1"),
+                 2L, new Node(2L, "user2"),
+                 3L, new Node(3L, "user3")
+             );
+
+            @Override
+            public Node fetch(Long id) {
+                System.out.println(String.format("--> [%d] One Node %s", Thread.currentThread().getId(), id));
+                runnable(() -> Thread.sleep(2000L)).run();
+                System.out.println(String.format("<-- [%d] One Node %s", Thread.currentThread().getId(), id));
+                return users.get(id);
+            }
+
+            @Override
+            public Map<Long, Node> batch(List<Long> ids) {
+                System.out.println(String.format("--> [%d] Batch Nodes %s", Thread.currentThread().getId(), ids));
+                runnable(() -> Thread.sleep(3000L)).run();
+                System.out.println(String.format("<-- [%d] Batch Nodes %s", Thread.currentThread().getId(), ids));
+                return ids.stream().distinct().map(users::get).collect(Collectors.toMap(Node::getId, Function.identity()));
+            }
+        };
+
+        System.out.printf("batchFetch %dms\n", measure(() -> IO.runIO(Fetch.runFetch(batchFetch, ds))) / 1000000);
+        System.out.printf("seqFetch %dms\n", measure(() -> IO.runIO(Fetch.runFetch(seqFetch, ds))) / 1000000);
     }
 
-    private static long measure(Callable<?> callable) {
+    private static long measure(Runnable block) {
         long start = System.nanoTime();
-        try {
-            System.out.println(callable.call());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        block.run();
         return System.nanoTime() - start;
     }
 
-    private static User getUser(Request<Long> request) {
-        try {
-            Thread.sleep(2000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return new User(request.getId(), "user" + request.getId());
-    }
-
-    private static Map<Long, User> getUsers(List<Request<Long>> requests) {
-        try {
-            Thread.sleep(3000L);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return requests.stream().map(r -> new User(r.getId(), "user" + r.getId())).collect(Collectors.toMap(User::getId, Function.identity()));
-    }
-
-    public static class User {
+    public static class Node {
         private final Long id;
         private final String username;
 
 
-        public User(Long id, String username) {
+        public Node(Long id, String username) {
             this.id = id;
             this.username = username;
         }

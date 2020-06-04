@@ -116,18 +116,18 @@ public class Fetch<R, A> {
     }
 
     // fetch remote resource
-    public static <ID, R> IO<Void> fetch(List<BlockedRequest<ID, R>> brs, Function<Request<ID>, R> fetchOne, Function<List<Request<ID>>, Map<ID, R>> fetchBatch) {
+    public static <ID, R> IO<Void> fetch(List<BlockedRequest<ID, R>> brs, DataSource<ID, R> ds) {
         if (brs.isEmpty()) {
             return IO.ret(null);
         }
 
         if (brs.size() == 1) {
             BlockedRequest<ID, R> first = brs.get(0);
-            return IO.bind(IO.of(() -> fetchOne.apply(first.getRequest())), user -> IORef.writeIORef(first.getRef(), new FetchSuccess<>(user)));
+            return IO.bind(IO.of(() -> ds.fetch(first.getRequest().getId())), user -> IORef.writeIORef(first.getRef(), new FetchSuccess<>(user)));
         }
 
         return IO.bind(
-            IO.of(() -> fetchBatch.apply(brs.stream().map(BlockedRequest::getRequest).collect(Collectors.toList()))),
+            IO.of(() -> ds.batch(brs.stream().map(BlockedRequest::getRequest).map(Request::getId).collect(Collectors.toList()))),
             results -> IO.mapM_((BlockedRequest<ID, R> br) -> {
                 Request<ID> r = br.getRequest();
                 IORef<FetchStatus<R>> ref = br.getRef();
@@ -136,7 +136,7 @@ public class Fetch<R, A> {
         );
     }
 
-    public static <ID, R, A> IO<A> runFetch(Fetch<R, A> f, Function<Request<ID>, R> fetchOne, Function<List<Request<ID>>, Map<ID, R>> fetchBatch) {
+    public static <ID, R, A> IO<A> runFetch(Fetch<R, A> f, DataSource<ID, R> ds) {
         return IO.bind(f.getUnFetch(), r -> {
             if (r instanceof Done) {
                 return IO.ret(((Done<A>) r).getValue());
@@ -145,7 +145,7 @@ public class Fetch<R, A> {
                 Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
                 List<BlockedRequest<ID, R>> br = blocked.getRequests();
                 Fetch<R, A> cont = blocked.getFetch();
-                return IO.bind(fetch(br, fetchOne, fetchBatch), x -> runFetch(cont, fetchOne, fetchBatch));
+                return IO.bind(fetch(br, ds), x -> runFetch(cont, ds));
             }
             throw new RuntimeException("4");
         });
