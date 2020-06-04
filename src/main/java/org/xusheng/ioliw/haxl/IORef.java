@@ -12,15 +12,15 @@ public class IORef<A> {
 
     }
 
-    public static <A> Higher<IO.µ, IORef<A>> newIORef(A a) {
-        return IO.I.ret(new IORef<>(a));
+    public static <A> IO<IORef<A>> newIORef(A a) {
+        return IO.ret(new IORef<>(a));
     }
 
-    public static <A> Higher<IO.µ, A> readIORef(IORef<A> ref) {
+    public static <A> IO<A> readIORef(IORef<A> ref) {
         return IO.of(() -> ref.value);
     }
 
-    public static <A> Higher<IO.µ, Void> writeIORef(IORef<A> ref, A a) {
+    public static <A> IO<Void> writeIORef(IORef<A> ref, A a) {
         return IO.of(() -> {
             ref.value = a;
             return null;
