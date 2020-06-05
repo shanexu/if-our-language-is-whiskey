@@ -708,7 +708,17 @@ such as sequential or parallel map-reduce transformations.
 *** Fetch
 
     #+begin_src java
+    public static Fetch<Node> getNode(String id) {
+        return Fetch.dataFetch(new Request<>(id));
+    }
 
+    public static Fetch<Node> getGraph(String id, Map<String, List<String>> deps) {
+        List<String> ids = deps.get(id);
+        if (ids == null) {
+            return getNode(id);
+        }
+        return Fetch.mapM(i -> getGraph(i, deps), ids).bind(getNode(id));
+    }
     #+end_src
 
 *** Main
