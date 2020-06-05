@@ -434,6 +434,7 @@ such as sequential or parallel map-reduce transformations.
 * Haskell
 
   [[./imgs/haskell-logo.svg]]
+  
   An advanced, purely functional programming language
 
 ** 关于Haskell的段子
