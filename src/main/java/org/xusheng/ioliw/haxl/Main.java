@@ -21,7 +21,7 @@ public class Main {
         IO.runIO(Fetch.runFetch(getGraph("A", deps), ds));
     }
 
-    private static DataSource<String, Node> ds = new DataSource<String, Node>() {
+    private static final DataSource<String, Node> ds = new DataSource<String, Node>() {
 
         private final Map<String, Node> nodeDatabase =
             ImmutableMap.<String, Node>builder()
@@ -78,6 +78,6 @@ public class Main {
         if (ids == null) {
             return getNode(id);
         }
-        return Fetch.bind(Fetch.mapM(i -> getGraph(i, deps), ids), getNode(id));
+        return Fetch.mapM(i -> getGraph(i, deps), ids).bind(getNode(id));
     }
 }
