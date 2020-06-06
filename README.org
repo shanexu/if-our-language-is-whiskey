@@ -568,7 +568,7 @@ such as sequential or parallel map-reduce transformations.
 
 ** make a plain
    
-   #+begin_src dot :export :file ./imgs/deps.png :cmdline -Kdot -Tpng
+   #+begin_src dot :exports results :file ./imgs/deps.png :cmdline -Kdot -Tpng
    digraph G {
      "A" -> "B"
      "A" -> "C"
