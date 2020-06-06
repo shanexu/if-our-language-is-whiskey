@@ -40,8 +40,7 @@ object sample {
       override def fetch(id: NodeName): F[Option[Node]] =
         latency[F](s"One Node $id") >> CF.pure(nodeDatabase.get(id))
 
-
-      override def maxBatchSize: Option[Int] = Some(2)
+      // override def maxBatchSize: Option[Int] = Some(2)
 
       override def batchExecution: BatchExecution = InParallel
 

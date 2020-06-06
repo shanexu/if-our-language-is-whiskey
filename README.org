@@ -681,14 +681,12 @@ such as sequential or parallel map-reduce transformations.
    #+end_src
 
    #+begin_src text
-   --> [20] Batch Nodes NonEmptyList(D, E)
-   --> [21] Batch Nodes NonEmptyList(F)
-   <-- [21] Batch Nodes NonEmptyList(F)
-   <-- [20] Batch Nodes NonEmptyList(D, E)
+   --> [19] Batch Nodes NonEmptyList(D, E, F)
+   <-- [19] Batch Nodes NonEmptyList(D, E, F)
    --> [21] Batch Nodes NonEmptyList(B, C)
    <-- [21] Batch Nodes NonEmptyList(B, C)
-   --> [20] One Node A
-   <-- [20] One Node A
+   --> [19] One Node A
+   <-- [19] One Node A
    #+end_src
 
 ** algorithm in java
