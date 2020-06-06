@@ -349,6 +349,8 @@ such as sequential or parallel map-reduce transformations.
     #+end_src
     
 *** Trampolines
+    
+    [[./imgs/trampoline.png]]
 
     #+begin_src java
     package org.xusheng.ioliw.tco;
