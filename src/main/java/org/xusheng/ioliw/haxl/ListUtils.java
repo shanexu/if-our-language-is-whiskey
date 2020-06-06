@@ -27,6 +27,7 @@ public class ListUtils {
         return go.apply(l);
     }
 
+    @SafeVarargs
     public static <A> List<A> concat(List<A>... ls) {
         if (ls.length == 0) {
             return Collections.emptyList();
@@ -39,6 +40,7 @@ public class ListUtils {
     }
 
 
+    @SafeVarargs
     public static <A> List<A> of(A... as) {
         return Arrays.stream(as).collect(Collectors.toList());
     }

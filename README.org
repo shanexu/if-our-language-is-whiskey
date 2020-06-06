@@ -455,6 +455,8 @@ such as sequential or parallel map-reduce transformations.
 *** my own jokes
     
     我大概看了这本书十年
+
+    Real Wrold Haskell
     
     [[./imgs/rwh-200.jpg]]
 
@@ -552,7 +554,7 @@ such as sequential or parallel map-reduce transformations.
        >> getLine
        >>= \name -> putStrLn ("Hello, " ++ name ++ "!")
      #+end_src
-
+     
 * Haxl
   
   Haxl is a Haskell library that simplifies access to remote data, such as databases or web-based services. Haxl can automatically
