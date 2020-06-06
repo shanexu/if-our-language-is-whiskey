@@ -568,7 +568,7 @@ such as sequential or parallel map-reduce transformations.
 
 ** make a plain
    
-   #+begin_src dot :file ./imgs/deps.png :cmdline -Kdot -Tpng
+   #+begin_src dot :export :file ./imgs/deps.png :cmdline -Kdot -Tpng
    digraph G {
      "A" -> "B"
      "A" -> "C"
@@ -584,10 +584,6 @@ such as sequential or parallel map-reduce transformations.
 
    #+begin_src text
    [D, E, F] --> [B, C] --> A
-   #+end_src
-
-   #+begin_src text
-   [D, E] -> [F] --> [B, C] --> A
    #+end_src
 
 ** scala fetch example
@@ -636,7 +632,7 @@ such as sequential or parallel map-reduce transformations.
            latency[F](s"One Node $id") >> CF.pure(nodeDatabase.get(id))
 
 
-         override def maxBatchSize: Option[Int] = Some(2)
+         // override def maxBatchSize: Option[Int] = Some(2)
 
          override def batchExecution: BatchExecution = InParallel
 
