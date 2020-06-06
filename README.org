@@ -458,7 +458,7 @@ such as sequential or parallel map-reduce transformations.
 
     Real Wrold Haskell
     
-    [[./imgs/rwh-200.jpg]]
+    [[./imgs/realworldhaskell.jpg]]
 
 
 ** pure function
