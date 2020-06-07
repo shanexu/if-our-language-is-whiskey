@@ -557,6 +557,7 @@ such as sequential or parallel map-reduce transformations.
        >>= \name -> putStrLn ("Hello, " ++ name ++ "!")
      #+end_src
      
+
 * Haxl
   
   Haxl is a Haskell library that simplifies access to remote data, such as databases or web-based services. Haxl can automatically
@@ -734,6 +735,7 @@ such as sequential or parallel map-reduce transformations.
     }
     #+end_src
 
+
 * 关于标题
 
   村上春树这次推出的游记《如果我们的语言是威士忌》中，还配有他夫人阳子拍摄的彩色风景照片40幅，因为游记中所记述的地方都是两人共同游历的。
@@ -741,6 +743,8 @@ such as sequential or parallel map-reduce transformations.
 
   [[file:./imgs/cover.jpg]]
 
+
 * Q & A
+
 
 * THANKS
