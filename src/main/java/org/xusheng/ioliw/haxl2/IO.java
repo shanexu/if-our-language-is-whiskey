@@ -1,14 +1,17 @@
-package org.xusheng.ioliw.haxl;
+package org.xusheng.ioliw.haxl2;
+
+import org.xusheng.ioliw.haxl.ListUtils;
 
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import java.util.function.Supplier;
+
+import static org.xusheng.ioliw.haxl2.Trampoline.done;
 
 public class IO<T> {
-    private final Supplier<T> value;
+    private final Trampoline<T> value;
 
-    private IO(Supplier<T> value) {
+    public IO(Trampoline<T> value) {
         this.value = value;
     }
 
@@ -17,11 +20,11 @@ public class IO<T> {
     }
 
     public static <T> IO<T> pure(T t) {
-        return new IO<>(() -> t);
+        return new IO<>(done(t));
     }
 
-    public static <T> IO<T> of(Supplier<T> s) {
-        return new IO<>(s);
+    public static <T> IO<T> of(Trampoline<T> v) {
+        return new IO<>(v);
     }
 
     public <B> IO<B> map(Function<T, B> f) {
@@ -29,7 +32,7 @@ public class IO<T> {
     }
 
     public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> fa) {
-        return new IO<>(() -> f.apply(fa.value.get()));
+        return new IO<>( fa.value.map(f));
     }
 
     public static <A, B> IO<B> ap(IO<Function<A, B>> m1, IO<A> m2) {
@@ -41,7 +44,7 @@ public class IO<T> {
     }
 
     public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
-        return new IO<>(() -> func.apply(ma.value.get()).value.get());
+        return new IO<>(ma.value.flatMap(x -> func.apply(x).value));
     }
 
     public <B> IO<B> bind(IO<B> mb) {
@@ -76,7 +79,6 @@ public class IO<T> {
     }
 
     public static <T> T runIO(IO<T> m) {
-        return m.value.get();
+        return m.value.runT();
     }
 }
-

@@ -2,16 +2,17 @@ package org.xusheng.ioliw.haxl2;
 
 import lombok.AllArgsConstructor;
 
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 public interface Trampoline<A> {
 
     default A runT() {
-        Optional<Done<A>> first = Stream.iterate(this, Trampoline::resume).filter(t -> t instanceof Done).map(t -> (Done<A>)t).findFirst();
-        return first.get().result;
+        Trampoline<A> t = this;
+        while (! (t instanceof Done)) {
+            t  = t.resume();
+        }
+        return ((Done<A>) t).result;
     }
 
     default Trampoline<A> resume() {
@@ -22,9 +23,17 @@ public interface Trampoline<A> {
         return new FlatMap<>(this, f);
     }
 
+    default <B> Trampoline<B> map(Function<A, B> f) {
+        return new FlatMap<>(this, a -> done(f.apply(a)));
+    }
+
     @AllArgsConstructor
     class Done<A> implements Trampoline<A> {
         private final A result;
+    }
+
+    static <T> Trampoline<T> done(T t) {
+        return new Done<>(t);
     }
 
     @AllArgsConstructor
@@ -35,6 +44,10 @@ public interface Trampoline<A> {
         public Trampoline<A> resume() {
             return k.get();
         }
+    }
+
+    static <T> Trampoline<T> more(Supplier<Trampoline<T>> k) {
+        return new More<>(k);
     }
 
     @AllArgsConstructor
@@ -56,8 +69,7 @@ public interface Trampoline<A> {
                     return new FlatMap<>(s.k.apply(((Done<Object>) s.sub).result), k);
                 }
                 if (s.sub instanceof More) {
-                    s = new FlatMap<>(((More<Object>) s.sub).k.get(), s.k);
-                    return new FlatMap<>(s, k);
+                    return new FlatMap<>(new FlatMap<>(((More<Object>) s.sub).k.get(), s.k), k);
                 }
                 if (s.sub instanceof FlatMap) {
                     FlatMap<Object, Object> ss = (FlatMap<Object, Object>) s.sub;
@@ -68,6 +80,10 @@ public interface Trampoline<A> {
             }
             throw new RuntimeException();
         }
+    }
+
+    static <B, T> Trampoline<T> flatMap(Trampoline<B> sub, Function<B, Trampoline<T>> k) {
+        return new FlatMap<>(sub, k);
     }
 
     static void main(String[] args) {

@@ -56,4 +56,13 @@ public class IOUtils {
     public static IO<Double> readDouble() {
         return readDouble(System.in);
     }
+
+    public static void main(String[] args) {
+        printf("what's your name? ")
+            .bind(readLine()).bind(name -> printf("Hello, %s\n", name))
+            .bind(printf("How old are you? "))
+            .bind(readInt())
+            .bind(age -> printf("You are %d years old.\n", age))
+            .runIO();
+    }
 }
