@@ -72,14 +72,14 @@ public interface Trampoline<A> {
 
     static void main(String[] args) {
         Trampoline<Void> m = new More<>(() -> {
-            System.out.println("hello");
+            System.out.println("begin");
             return new Done<>(null);
         });
         for (int i = 0; i < 1000000; i++) {
             m = m.flatMap(x -> new Done<>(null));
         }
         m = m.flatMap(x -> {
-            System.out.println("world");
+            System.out.println("end");
             return new Done<>(null);
         });
         m.runT();
