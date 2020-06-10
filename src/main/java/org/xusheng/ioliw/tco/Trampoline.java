@@ -5,7 +5,7 @@ import java.util.stream.Stream;
 import static org.xusheng.ioliw.tco.TailCalls.call;
 import static org.xusheng.ioliw.tco.TailCalls.done;
 
-public class Trampolining {
+public class Trampoline {
     private static TailCall<Boolean> evenRec(final int number) {
         if (number == 0) {
             return done(true);
