@@ -572,6 +572,7 @@ such as sequential or parallel map-reduce transformations.
 
 ** make a plain
    
+   假设几个数据之间依赖关系如下：
    #+begin_src dot :exports results :file ./imgs/deps.png :cmdline -Kdot -Tpng
    digraph G {
      "A" -> "B"
@@ -586,6 +587,7 @@ such as sequential or parallel map-reduce transformations.
    #+RESULTS:
    [[file:./imgs/deps.png]]
 
+   一种资源获取/计算的执行计划可以如下：
    #+begin_src dot :exports results :file ./imgs/schedule.png :cmdline -Kdot -Tpng
    digraph G {
      rankdir="LR";
