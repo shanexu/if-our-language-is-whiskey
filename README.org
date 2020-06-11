@@ -3,6 +3,13 @@
 #+EMAIL:       sheng.xu@tongdun.net
 #+DATE:        2020-06-01
 
+* 前言
+
+  随着软件变得越来越复杂，好的架构也变得越来越重要。具有好的架构的软件易于编写、调试和测试，并且能够尽可能得复用已有的模块，
+从而降低功能开发的代价。不同于面向对象，函数式编程试图从函数的角度来封装模块，拆解功能，构造软件。
+本次分享将从Java8引入的“新”特性开始，通过Haskell这门函数式编程语言和Haxl这个库，
+介绍函数式编程的一些特性：高阶函数、懒惰求值、不可变数据和函数式编程的一些概念：纯函数、副作用、函子、应用函子、单子。
+
 * Java函数式编程
 
   March 18, 2014
@@ -433,7 +440,7 @@ such as sequential or parallel map-reduce transformations.
     #+end_src
 
 
-* Haskell
+* Haskell函数式编程语言
 
   [[./imgs/haskell-logo.svg]]
   
@@ -559,7 +566,7 @@ such as sequential or parallel map-reduce transformations.
      #+end_src
      
 
-* Haxl
+* Haxl基于Monad的优雅的数据加载框架
   
   Haxl is a Haskell library that simplifies access to remote data, such as databases or web-based services. Haxl can automatically
 
