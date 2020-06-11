@@ -61,43 +61,11 @@ public class IOUtils {
     }
 
     public static void main(String[] args) {
-//        printf("what's your name? ")
-//            .bind(readLine())
-//            .bind(name -> printf("Hello, %s\n", name))
-//            .bind(printf("How old are you? "))
-//            .bind(readInt())
-//            .bind(age -> printf("You are %d years old.\n", age))
-//            .runIO();
-//        printf("What's your name? ")
-//            .bind(readLine())
-//            .bind(name -> printf("Hello, %s\n", name))
-//            .bind(printf("How old are you? ")).runIO();
-
-        more(() -> {
-            System.out.println("What's your name?");
-            return done(null);
-        })
-            .flatMap(x -> {
-                System.out.println("get name");
-                return done("shane");
-            })
-            .flatMap(name -> {
-                System.out.printf("Hello, %s\n", name);
-                return done(null);
-            })
-            .flatMap(x -> {
-                System.out.println("How old are you?");
-                return done(null);
-            })
-            .runT();
-//        IO.of(more(() -> {
-//            System.out.println("What's your name?");
-//            return done(null);
-//        })).bind(x -> new IO<>(done(new Scanner(System.in).nextLine())))
-//            .bind(x -> {
-//                System.out.println("How old are you?");
-//                return new IO<>(done(null));
-//            }).runIO();
-
+        printf("what's your name? ")
+            .bind(readLine()).bind(name -> printf("Hello, %s\n", name))
+            .bind(printf("How old are you? "))
+            .bind(readInt())
+            .bind(age -> printf("You are %d years old.\n", age))
+            .runIO();
     }
 }

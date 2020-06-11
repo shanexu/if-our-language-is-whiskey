@@ -9,8 +9,8 @@ public interface Trampoline<A> {
 
     default A runT() {
         Trampoline<A> t = this;
-        while (! (t instanceof Done)) {
-            t  = t.resume();
+        while (!(t instanceof Done)) {
+            t = t.resume();
         }
         return ((Done<A>) t).result;
     }
@@ -65,18 +65,9 @@ public interface Trampoline<A> {
             }
             if (sub instanceof FlatMap) {
                 FlatMap<Object, B> s = (FlatMap<Object, B>) sub;
-                if (s.sub instanceof Done) {
-                    return new FlatMap<>(s.k.apply(((Done<Object>) s.sub).result), k);
-                }
-                if (s.sub instanceof More) {
-                    return new FlatMap<>(new FlatMap<>(((More<Object>) s.sub).k.get(), s.k), k);
-                }
-                if (s.sub instanceof FlatMap) {
-                    FlatMap<Object, Object> ss = (FlatMap<Object, Object>) s.sub;
-                    Trampoline<Object> b = ss.sub;
-                    Function<Object, Trampoline<Object>> g = ss.k;
-                    return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), (Function<Object, Trampoline<A>>) k));
-                }
+                Trampoline<Object> b = s.sub;
+                Function<Object, Trampoline<B>> g = s.k;
+                return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), k));
             }
             throw new RuntimeException();
         }
