@@ -783,7 +783,6 @@ such as sequential or parallel map-reduce transformations.
      #+end_src
 
 **** 还记得trampoline吗？
-
      
 ***** 定义trampoline interface
 
@@ -895,68 +894,68 @@ such as sequential or parallel map-reduce transformations.
       }
       #+end_src
 
-***** 使用Trampoline优化IO
+**** 使用Trampoline优化IO
 
-      #+begin_src java
-      public class IO<T> {
-          private final Trampoline<T> value;
+     #+begin_src java
+     public class IO<T> {
+         private final Trampoline<T> value;
 
-          public IO(Trampoline<T> value) {
-              this.value = value;
-          }
+         public IO(Trampoline<T> value) {
+             this.value = value;
+         }
 
-          public static <T> IO<T> ret(T t) {
-              return new IO<>(done(t));
-          }
+         public static <T> IO<T> ret(T t) {
+             return new IO<>(done(t));
+         }
 
-          public static <T> IO<T> of(Trampoline<T> v) {
-              return new IO<>(v);
-          }
+         public static <T> IO<T> of(Trampoline<T> v) {
+             return new IO<>(v);
+         }
 
-          public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> a) {
-              return new IO<>(a.value.map(f));
-          }
+         public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> a) {
+             return new IO<>(a.value.map(f));
+         }
 
-          public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
-              return new IO<>(ma.value.flatMap(x -> func.apply(x).value));
-          }
-      }
-      #+end_src
+         public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
+             return new IO<>(ma.value.flatMap(x -> func.apply(x).value));
+         }
+     }
+     #+end_src
 
-***** 优化util
+**** 优化util
 
-      #+begin_src java
-      public static IO<Void> printf(PrintStream s, String format, Object... args) {
-          return IO.of(more(() -> {
-                      s.printf(format, args);
-                      return done(null);
-                  }));
-      }
+     #+begin_src java
+     public static IO<Void> printf(PrintStream s, String format, Object... args) {
+         return IO.of(more(() -> {
+                     s.printf(format, args);
+                     return done(null);
+                 }));
+     }
 
-      public static IO<String> readLine(InputStream s) {
-          return IO.of(more(() -> done(new Scanner(s).nextLine())));
-      }
-      #+end_src
+     public static IO<String> readLine(InputStream s) {
+         return IO.of(more(() -> done(new Scanner(s).nextLine())));
+     }
+     #+end_src
 
-***** 再试一次
+**** 再试一次
 
-      #+begin_src java
-      public static void main(String[] args) {
-          IO<Void> m = printf("trampoline\n")
-              .bind(printf("begin\n"));
-          for (int i = 0; i < 10000; i++) {
-              m = m.bind(IO.ret(0)).bind(IO.ret(null));
-          }
-          m = m.bind(printf("end\n"));
-          m.runIO();
-      }
-      #+end_src
+     #+begin_src java
+     public static void main(String[] args) {
+         IO<Void> m = printf("trampoline\n")
+             .bind(printf("begin\n"));
+         for (int i = 0; i < 10000; i++) {
+             m = m.bind(IO.ret(0)).bind(IO.ret(null));
+         }
+         m = m.bind(printf("end\n"));
+         m.runIO();
+     }
+     #+end_src
 
-      #+begin_src text
-      trampoline
-      begin
-      end
-      #+end_src
+     #+begin_src text
+     trampoline
+     begin
+     end
+     #+end_src
 
 *** Fetch
 
