@@ -32,7 +32,7 @@ public class IO<T> {
     }
 
     public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> fa) {
-        return new IO<>( fa.value.map(f));
+        return new IO<>(fa.value.map(f));
     }
 
     public static <A, B> IO<B> ap(IO<Function<A, B>> m1, IO<A> m2) {

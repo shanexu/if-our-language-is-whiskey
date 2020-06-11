@@ -694,16 +694,269 @@ such as sequential or parallel map-reduce transformations.
 
 *** IO
     
-    #+begin_src java
-    public static void main(String[] args) {
-        printf("what's your name? ")
-            .bind(readLine()).bind(name -> printf("Hello, %s\n", name))
-            .bind(printf("How old are you? "))
-            .bind(readInt())
-            .bind(age -> printf("You are %d years old.\n", age))
-            .runIO();
-    }
-    #+end_src
+**** 一个简单的实现
+
+     #+begin_src java
+     public class IO<T> {
+         private final Supplier<T> value;
+
+         private IO(Supplier<T> value) {
+             this.value = value;
+         }
+
+         public static <T> IO<T> of(Supplier<T> value) {
+             return new IO<>(value);
+         }
+
+         public static <T> IO<T> ret(T t) {
+             return new IO<>(() -> t);
+         }
+
+         public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> f) {
+             return new IO<>(() -> f.apply(ma.value.get()).value.get());
+         }
+     }
+
+     #+end_src
+
+**** 写几个util
+
+     #+begin_src java
+     public static IO<Void> printf(PrintStream s, String format, Object... args) {
+         return IO.of(() -> {
+                 s.printf(format, args);
+                 return null;
+             });
+     }
+
+     public static IO<Void> printf(String format, Object... args) {
+         return printf(System.out, format, args);
+     }
+
+     public static IO<String> readLine(InputStream s) {
+         return IO.of(() -> new Scanner(s).nextLine());
+     }
+
+     public static IO<String> readLine() {
+         return readLine(System.in);
+     }
+     #+end_src
+
+**** 使用实例
+
+     #+begin_src java
+     public static void main(String[] args) {
+         printf("What's your name? ")
+             .bind(readLine()).bind(name -> printf("Hello, %s\n", name))
+             .bind(printf("How old are you? "))
+             .bind(readInt())
+             .bind(age -> printf("You are %d years old.\n", age))
+             .runIO();
+     }
+     #+end_src
+
+**** 但是...
+
+     #+begin_src java
+     IO<Void> m = printf("function composition\n")
+         .bind(printf("begin\n"));
+     for (int i = 0; i < 10000; i++) {
+         m = m.bind(IO.ret(1)).bind(IO.ret(null));
+     }
+     m = m.bind(printf("end\n"));
+     m.runIO();
+     #+end_src
+
+     #+begin_src text
+     Exception in thread "main" java.lang.StackOverflowError
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+       at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+     ...
+     #+end_src
+
+**** 还记得trampoline吗？
+
+     
+***** 定义trampoline interface
+
+      #+begin_src java
+      public interface Trampoline<A> {
+
+          Trampoline<A> resume();
+
+          default A runT() {
+              Trampoline<A> t = this;
+              while (!(t instanceof Done)) {
+                  t = t.resume();
+              }
+              return ((Done<A>) t).result;
+          }
+
+          default <B> Trampoline<B> flatMap(Function<A, Trampoline<B>> f) {
+              return new FlatMap<>(this, f);
+          }
+
+          default <B> Trampoline<B> map(Function<A, B> f) {
+              return new FlatMap<>(this, a -> done(f.apply(a)));
+          }
+
+      }
+      #+end_src
+
+***** Done
+
+      #+begin_src java
+      @AllArgsConstructor
+      class Done<A> implements Trampoline<A> {
+          private final A result;
+
+          @Override
+          public Trampoline<A> resume() {
+              return this;
+          }
+      }
+
+      static <T> Trampoline<T> done(T t) {
+          return new Done<>(t);
+      }
+      #+end_src
+
+***** More
+
+      #+begin_src java
+      @AllArgsConstructor
+      class More<A> implements Trampoline<A> {
+          private final Supplier<Trampoline<A>> k;
+
+          @Override
+          public Trampoline<A> resume() {
+              return k.get();
+          }
+      }
+
+      static <T> Trampoline<T> more(Supplier<Trampoline<T>> k) {
+          return new More<>(k);
+      }
+      #+end_src
+
+***** FlatMap
+      
+      #+begin_src java
+      @AllArgsConstructor
+      class FlatMap<B, A> implements Trampoline<A> {
+          private final Trampoline<B> sub;
+          private final Function<B, Trampoline<A>> k;
+
+          @Override
+          public Trampoline<A> resume() {
+              if (sub instanceof Done) {
+                  return k.apply(((Done<B>) sub).result);
+              }
+              if (sub instanceof More) {
+                  return new FlatMap<>(((More<B>) sub).k.get(), k);
+              }
+              if (sub instanceof FlatMap) {
+                  FlatMap<Object, B> s = (FlatMap<Object, B>) sub;
+                  Trampoline<Object> b = s.sub;
+                  Function<Object, Trampoline<B>> g = s.k;
+                  return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), k));
+              }
+              throw new RuntimeException("unhandled sub type " + this.sub.getClass());
+          }
+      }
+
+      static <B, A> Trampoline<A> flatMap(Trampoline<B> sub, Function<B, Trampoline<A>> k) {
+          return new FlatMap<>(sub, k);
+      }
+      #+end_src
+
+***** 实例
+      
+      #+begin_src java
+      public static void main(String[] args) {
+          more(() -> {
+                  System.out.print("What's your name? ");
+                  return done(null);
+              })
+              .flatMap(v -> done(new Scanner(System.in).nextLine()))
+              .flatMap(name -> {
+                      System.out.printf("Hello, %s!\n", name);
+                      return done(null);
+                  })
+              .runT();
+      }
+      #+end_src
+
+***** 使用Trampoline优化IO
+
+      #+begin_src java
+      public class IO<T> {
+          private final Trampoline<T> value;
+
+          public IO(Trampoline<T> value) {
+              this.value = value;
+          }
+
+          public static <T> IO<T> ret(T t) {
+              return new IO<>(done(t));
+          }
+
+          public static <T> IO<T> of(Trampoline<T> v) {
+              return new IO<>(v);
+          }
+
+          public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> a) {
+              return new IO<>(a.value.map(f));
+          }
+
+          public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
+              return new IO<>(ma.value.flatMap(x -> func.apply(x).value));
+          }
+      }
+      #+end_src
+
+***** 优化util
+
+      #+begin_src java
+      public static IO<Void> printf(PrintStream s, String format, Object... args) {
+          return IO.of(more(() -> {
+                      s.printf(format, args);
+                      return done(null);
+                  }));
+      }
+
+      public static IO<String> readLine(InputStream s) {
+          return IO.of(more(() -> done(new Scanner(s).nextLine())));
+      }
+      #+end_src
+
+***** 再试一次
+
+      #+begin_src java
+      public static void main(String[] args) {
+          IO<Void> m = printf("trampoline\n")
+              .bind(printf("begin\n"));
+          for (int i = 0; i < 10000; i++) {
+              m = m.bind(IO.ret(0)).bind(IO.ret(null));
+          }
+          m = m.bind(printf("end\n"));
+          m.runIO();
+      }
+      #+end_src
+
+      #+begin_src text
+      trampoline
+      begin
+      end
+      #+end_src
 
 *** Fetch
 
@@ -735,6 +988,19 @@ such as sequential or parallel map-reduce transformations.
     }
     #+end_src
 
+
+* 参考文档
+
+  1. Why Functional Programming Matters
+     [[https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf]]
+  2. All About Monads
+     [[https://wiki.haskell.org/All_About_Monads]]
+  3. Stackless Scala With Free Monads
+     [[http://blog.higher-order.com/assets/trampolines.pdf]]
+  4. There is no Fork: an Abstraction for Efficient, Concurrent, and Concise Data Access
+     [[http://simonmar.github.io/bib/papers/haxl-icfp14.pdf]]
+  5. Real World Haskell
+     [[http://book.realworldhaskell.org/read/]]
 
 * 关于标题
 

@@ -58,11 +58,19 @@ public class IOUtils {
     }
 
     public static void main(String[] args) {
-        printf("what's your name? ")
+        printf("What's your name? ")
             .bind(readLine()).bind(name -> printf("Hello, %s\n", name))
             .bind(printf("How old are you? "))
             .bind(readInt())
             .bind(age -> printf("You are %d years old.\n", age))
             .runIO();
+
+        IO<Void> m = printf("function composition\n")
+            .bind(printf("begin\n"));
+        for (int i = 0; i < 10000; i++) {
+            m = m.bind(IO.ret(1)).bind(IO.ret(null));
+        }
+        m = m.bind(printf("end\n"));
+        m.runIO();
     }
 }

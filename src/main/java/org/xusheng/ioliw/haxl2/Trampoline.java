@@ -2,10 +2,13 @@ package org.xusheng.ioliw.haxl2;
 
 import lombok.AllArgsConstructor;
 
+import java.util.Scanner;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public interface Trampoline<A> {
+
+    Trampoline<A> resume();
 
     default A runT() {
         Trampoline<A> t = this;
@@ -13,10 +16,6 @@ public interface Trampoline<A> {
             t = t.resume();
         }
         return ((Done<A>) t).result;
-    }
-
-    default Trampoline<A> resume() {
-        return this;
     }
 
     default <B> Trampoline<B> flatMap(Function<A, Trampoline<B>> f) {
@@ -30,6 +29,11 @@ public interface Trampoline<A> {
     @AllArgsConstructor
     class Done<A> implements Trampoline<A> {
         private final A result;
+
+        @Override
+        public Trampoline<A> resume() {
+            return this;
+        }
     }
 
     static <T> Trampoline<T> done(T t) {
@@ -69,26 +73,24 @@ public interface Trampoline<A> {
                 Function<Object, Trampoline<B>> g = s.k;
                 return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), k));
             }
-            throw new RuntimeException();
+            throw new RuntimeException("unhandled sub type " + this.sub.getClass());
         }
     }
 
-    static <B, T> Trampoline<T> flatMap(Trampoline<B> sub, Function<B, Trampoline<T>> k) {
+    static <B, A> Trampoline<A> flatMap(Trampoline<B> sub, Function<B, Trampoline<A>> k) {
         return new FlatMap<>(sub, k);
     }
 
-    static void main(String[] args) {
-        Trampoline<Void> m = new More<>(() -> {
-            System.out.println("begin");
-            return new Done<>(null);
-        });
-        for (int i = 0; i < 1000000; i++) {
-            m = m.flatMap(x -> new Done<>(null));
-        }
-        m = m.flatMap(x -> {
-            System.out.println("end");
-            return new Done<>(null);
-        });
-        m.runT();
+    public static void main(String[] args) {
+        more(() -> {
+            System.out.print("What's your name? ");
+            return done(null);
+        })
+            .flatMap(v -> done(new Scanner(System.in).nextLine()))
+            .flatMap(name -> {
+                System.out.printf("Hello, %s!\n", name);
+                return done(null);
+            })
+            .runT();
     }
 }

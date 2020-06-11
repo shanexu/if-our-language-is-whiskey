@@ -40,8 +40,8 @@ public class IO<T> {
         return bind(this, func);
     }
 
-    public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
-        return new IO<>(() -> func.apply(ma.value.get()).value.get());
+    public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> f) {
+        return new IO<>(() -> f.apply(ma.value.get()).value.get());
     }
 
     public <B> IO<B> bind(IO<B> mb) {
