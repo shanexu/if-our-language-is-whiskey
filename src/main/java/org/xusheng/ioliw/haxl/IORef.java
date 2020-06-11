@@ -1,16 +1,12 @@
 package org.xusheng.ioliw.haxl;
 
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+
+@AllArgsConstructor
+@NoArgsConstructor
 public class IORef<A> {
-
     private A value;
-
-    private IORef(A value) {
-        this.value = value;
-    }
-
-    private IORef() {
-
-    }
 
     public static <A> IO<IORef<A>> newIORef(A a) {
         return IO.ret(new IORef<>(a));

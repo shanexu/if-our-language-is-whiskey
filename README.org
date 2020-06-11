@@ -514,7 +514,15 @@ such as sequential or parallel map-reduce transformations.
    main = hello "World"
    #+end_src
 
-** Monad, Functor, Applicative
+** Functor(函子), Applicative Functor(应用函子), Monad(单子)
+
+*** Functor
+    
+    #+begin_src haskell
+    class Functor f where
+        fmap :: (a -> b) -> f a -> f b
+    #+end_src
+
 
 *** Applicative
 
@@ -522,13 +530,6 @@ such as sequential or parallel map-reduce transformations.
     class (Functor f) => Applicative f where
         pure  :: a -> f a
         (<*>) :: f (a -> b) -> f a -> f b'
-    #+end_src
-
-*** Functor
-    
-    #+begin_src haskell
-    class Functor f where
-        fmap :: (a -> b) -> f a -> f b
     #+end_src
 
 *** Monad
@@ -585,9 +586,16 @@ such as sequential or parallel map-reduce transformations.
    #+RESULTS:
    [[file:./imgs/deps.png]]
 
-   #+begin_src text
-   [D, E, F] --> [B, C] --> A
+   #+begin_src dot :exports results :file ./imgs/schedule.png :cmdline -Kdot -Tpng
+   digraph G {
+     rankdir="LR";
+     node [shape=box];
+     "D, E, F" -> "B, C" -> "A"
+   }
    #+end_src
+
+   #+RESULTS:
+   [[file:./imgs/schedule.png]]
 
 ** scala fetch example
 
@@ -958,20 +966,292 @@ such as sequential or parallel map-reduce transformations.
      #+end_src
 
 *** Fetch
+    
+**** DataSource
 
-    #+begin_src java
-    public static Fetch<Node> getNode(String id) {
-        return Fetch.dataFetch(new Request<>(id));
-    }
+     #+begin_src java
+     public interface DataSource<ID, DATA> {
+         DATA fetch(ID id);
+         default Map<ID, DATA> batch(List<ID> ids) {
+             return ids.stream().distinct().map(id -> Tuple.tuple(id, fetch(id))).collect(Collectors.toMap(Tuple2::v1, Tuple2::v2));
+         }
+     }
+     #+end_src
 
-    public static Fetch<Node> getGraph(String id, Map<String, List<String>> deps) {
-        List<String> ids = deps.get(id);
-        if (ids == null) {
-            return getNode(id);
-        }
-        return Fetch.mapM(i -> getGraph(i, deps), ids).bind(getNode(id));
-    }
-    #+end_src
+**** Request & BlockedRequest
+
+     #+begin_src java
+     @AllArgsConstructor
+     @EqualsAndHashCode
+     @Getter
+     public class Request<ID> {
+         private final ID id;
+     }
+
+     @AllArgsConstructor
+     @Getter
+     public class BlockedRequest<ID, DATA> {
+         private final Request<ID> request;
+         private final IORef<FetchStatus<DATA>> ref;
+     }
+     #+end_src
+
+**** FetchStatus
+     
+     #+begin_src java
+     public interface FetchStatus<A> {
+         class NotFetched<A> implements FetchStatus<A> {}
+
+         @AllArgsConstructor
+         @Getter
+         class FetchSuccess<A> implements FetchStatus<A> {
+             private final A value;
+         }
+     }
+     #+end_src
+
+**** IORef
+
+     #+begin_src java
+     @AllArgsConstructor
+     @NoArgsConstructor
+     public class IORef<A> {
+         private A value;
+
+         public static <A> IO<IORef<A>> newIORef(A a) {
+             return IO.ret(new IORef<>(a));
+         }
+
+         public static <A> IO<A> readIORef(IORef<A> ref) {
+             return IO.of(() -> ref.value);
+         }
+
+         public static <A> IO<Void> writeIORef(IORef<A> ref, A a) {
+             return IO.of(() -> {
+                     ref.value = a;
+                     return null;
+                 });
+         }
+     }
+     #+end_src
+
+**** Result
+
+     #+begin_src java
+     public interface Result<A> {
+         @AllArgsConstructor
+         @Getter
+         class Done<A> implements Result<A> {
+             private final A value;
+         }
+
+         @AllArgsConstructor
+         @Getter
+         class Blocked<ID, R, A> implements Result<A> {
+             private final List<BlockedRequest<ID, R>> requests;
+             private final Fetch<A> fetch;
+         }
+     }
+     #+end_src
+
+**** Fetch
+
+     Fetch只是一个简单的带有类型为IO<Result<A>>字段的类。
+     #+begin_src java
+     @AllArgsConstructor
+     @Getter
+     public class Fetch<A> {
+         private final IO<Result<A>> unFetch;
+     }
+     #+end_src
+
+***** pure/return
+      
+      #+begin_src java
+      public static <A> Fetch<A> ret(A a) {
+          return new Fetch<>(IO.ret(new Done<>(a)));
+      }
+      #+end_src
+
+***** fmap
+      
+      先看Haskell代码
+      #+begin_src haskell
+      fmap f a = Fetch $ do
+        a' <- a
+        case a' of
+          Done x -> Done (f x)
+          Blocked br c -> Blocked br (fmap f c)
+      #+end_src
+
+      再看java代码
+      #+begin_src java
+      public static <ID, R, A, B> Fetch<B> fmap(Function<A, B> f, Fetch<A> x) {
+          return new Fetch<>(IO.fmap(r -> {
+                      if (r instanceof Done) {
+                          return new Done<>(f.apply(((Done<A>) r).getValue()));
+                      }
+                      if (r instanceof Blocked) {
+                          Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
+                          return new Blocked<>(blocked.getRequests(), fmap(f, blocked.getFetch()));
+                      }
+                      throw new RuntimeException("unhandled type " + r.getClass());
+                  }, x.unFetch));
+      }
+      #+end_src
+
+***** bind
+      
+      先看Haskell代码
+      #+begin_src haskell
+      Fetch m >>= k = Fetch $ do
+        r <- m
+        case r of
+          Done a -> unFetch (k a)
+          Blocked br c -> return (Blocked br (c >>= k))
+      #+end_src
+
+      再看java代码
+      #+begin_src java
+      public static <ID, R, A, B> Fetch<B> bind(Fetch<A> m, Function<A, Fetch<B>> k) {
+          return new Fetch<>(IO.bind(m.unFetch, r -> {
+                      if (r instanceof Done) {
+                          return k.apply(((Done<A>) r).getValue()).unFetch;
+                      }
+                      if (r instanceof Blocked) {
+                          Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
+                          List<BlockedRequest<ID, R>> br = blocked.getRequests();
+                          Fetch<A> c = blocked.getFetch();
+                          return IO.ret(new Blocked<>(br, Fetch.bind(c, k)));
+                      }
+                      throw new RuntimeException("unhandled type " + r.getClass());
+                  }));
+      }
+      #+end_src
+
+***** <*>,ap
+
+      先看Haskell代码
+      #+begin_src haskell
+      Fetch f <*> Fetch x = Fetch $ do
+        f' <- f
+        x' <- x
+        case (f', x') of
+          (Done g,        Done y       ) -> return (Done (g y))
+          (Done g,        Blocked br c ) -> return (Blocked br (g <$> c))
+          (Blocked br c,  Done y       ) -> return (Blocked br (c <*> return y))
+          (Blocked br1 c, Blocked br2 d) -> return (Blocked (br1 <> br2) (c <*> d))
+      #+end_src
+
+      再看java代码
+
+      #+begin_src java
+      public static <ID, R, A, B> Fetch<B> ap(Fetch<Function<A, B>> f, Fetch<A> x) {
+          return new Fetch<>(IO.bind(f.unFetch, f_ -> IO.bind(x.unFetch, x_ -> {
+              if (f_ instanceof Done && x_ instanceof Done) {
+                  Function<A, B> g = ((Done<Function<A, B>>) f_).getValue();
+                  A y = ((Done<A>) x_).getValue();
+                  return IO.ret(new Done<>(g.apply(y)));
+              }
+              if (f_ instanceof Done && x_ instanceof Blocked) {
+                  Function<A, B> g = ((Done<Function<A, B>>) f_).getValue();
+                  Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) x_;
+                  List<BlockedRequest<ID, R>> br = blocked.getRequests();
+                  Fetch<A> c = blocked.getFetch();
+                  return IO.ret(new Blocked<>(br, fmap(g, c)));
+              }
+              if (f_ instanceof Blocked && x_ instanceof Done) {
+                  Blocked<ID, R, Function<A, B>> blocked = (Blocked<ID, R, Function<A, B>>) f_;
+                  List<BlockedRequest<ID, R>> br = blocked.getRequests();
+                  Fetch<Function<A, B>> c = blocked.getFetch();
+                  A y = ((Done<A>) x_).getValue();
+                  return IO.ret(new Blocked<>(br, ap(c, ret(y))));
+              }
+              if (f_ instanceof Blocked && x_ instanceof Blocked) {
+                  Blocked<ID, R, Function<A, B>> blocked1 = (Blocked<ID, R, Function<A, B>>) f_;
+                  Blocked<ID, R, A> blocked2 = (Blocked<ID, R, A>) x_;
+                  List<BlockedRequest<ID, R>> br1 = blocked1.getRequests();
+                  Fetch<Function<A, B>> c = blocked1.getFetch();
+                  List<BlockedRequest<ID, R>> br2 = blocked2.getRequests();
+                  Fetch<A> d = blocked2.getFetch();
+                  List<BlockedRequest<ID, R>> br = ListUtils.concat(br1, br2);
+                  return IO.ret(new Blocked<>(br, ap(c, d)));
+              }
+              throw new RuntimeException("unhandled type (f_, x_) " + Tuple.tuple(f_.getClass(), x_.getClass()));
+          })));
+      }
+      #+end_src
+      
+***** fetch, fetchData
+
+      先看Haskell代码
+      #+begin_src haskell
+      fetch :: [BlockedRequest] -> IO ()
+
+      runFetch :: Fetch a -> IO a
+      runFetch (Fetch h) = do
+        r <- h
+        case r of
+          Done a -> return a
+          Blocked br cont -> do
+            fetch (toList br)
+            runFetch cont
+      #+end_src
+
+      再看java代码
+      #+begin_src java
+      // fetch remote resource
+      public static <ID, R> IO<Void> fetch(List<BlockedRequest<ID, R>> brs, DataSource<ID, R> ds) {
+          if (brs.isEmpty()) {
+              return IO.ret(null);
+          }
+
+          if (brs.size() == 1) {
+              BlockedRequest<ID, R> first = brs.get(0);
+              return IO.bind(IO.of(() -> ds.fetch(first.getRequest().getId())), user -> IORef.writeIORef(first.getRef(), new FetchSuccess<>(user)));
+          }
+
+          return IO.bind(
+                         IO.of(() -> ds.batch(brs.stream().map(BlockedRequest::getRequest).distinct().map(Request::getId).collect(Collectors.toList()))),
+                         results -> IO.mapM_((BlockedRequest<ID, R> br) -> {
+                                 Request<ID> r = br.getRequest();
+                                 IORef<FetchStatus<R>> ref = br.getRef();
+                                 return IORef.writeIORef(ref, new FetchSuccess<>(results.get(r.getId())));
+                             }, brs)
+                         );
+      }
+
+      public static <ID, R, A> IO<A> runFetch(Fetch<A> f, DataSource<ID, R> ds) {
+          return IO.bind(f.getUnFetch(), r -> {
+                  if (r instanceof Done) {
+                      return IO.ret(((Done<A>) r).getValue());
+                  }
+                  if (r instanceof Blocked) {
+                      Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
+                      List<BlockedRequest<ID, R>> br = blocked.getRequests();
+                      Fetch<A> cont = blocked.getFetch();
+                      return IO.bind(fetch(br, ds), x -> runFetch(cont, ds));
+                  }
+                  throw new RuntimeException("unhandled type " + r.getClass());
+              });
+      }
+      #+end_src
+
+**** fetch a graph
+
+     #+begin_src java
+     public static Fetch<Node> getNode(String id) {
+         return Fetch.dataFetch(new Request<>(id));
+     }
+
+     public static Fetch<Node> getGraph(String id, Map<String, List<String>> deps) {
+         List<String> ids = deps.get(id);
+         if (ids == null) {
+             return getNode(id);
+         }
+         return Fetch.mapM(i -> getGraph(i, deps), ids).bind(getNode(id));
+     }
+     #+end_src
 
 *** Main
     
@@ -987,6 +1267,15 @@ such as sequential or parallel map-reduce transformations.
     }
     #+end_src
 
+    #+begin_src text
+    --> [1] Batch Nodes [D, E, F]
+    <-- [1] Batch Nodes [D, E, F]
+    --> [1] Batch Nodes [B, C]
+    <-- [1] Batch Nodes [B, C]
+    --> [1] One Node A
+    <-- [1] One Node A
+    #+end_src
+
 
 * 参考文档
 
@@ -1000,6 +1289,8 @@ such as sequential or parallel map-reduce transformations.
      [[http://simonmar.github.io/bib/papers/haxl-icfp14.pdf]]
   5. Real World Haskell
      [[http://book.realworldhaskell.org/read/]]
+  6. Category Theory for Programmers
+     [[https://github.com/hmemcpy/milewski-ctfp-pdf]]
 
 * 关于标题
 

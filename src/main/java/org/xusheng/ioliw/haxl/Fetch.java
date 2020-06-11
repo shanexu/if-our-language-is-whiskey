@@ -1,5 +1,9 @@
 package org.xusheng.ioliw.haxl;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import org.jooq.lambda.tuple.Tuple;
+
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
@@ -10,16 +14,10 @@ import static org.xusheng.ioliw.haxl.FetchStatus.NotFetched;
 import static org.xusheng.ioliw.haxl.Result.Blocked;
 import static org.xusheng.ioliw.haxl.Result.Done;
 
+@AllArgsConstructor
+@Getter
 public class Fetch<A> {
     private final IO<Result<A>> unFetch;
-
-    public IO<Result<A>> getUnFetch() {
-        return unFetch;
-    }
-
-    public Fetch(IO<Result<A>> unFetch) {
-        this.unFetch = unFetch;
-    }
 
     public <B> Fetch<B> bind(Function<A, Fetch<B>> f) {
         return bind(this, f);
@@ -43,7 +41,7 @@ public class Fetch<A> {
                 Blocked<ID, R, A> blocked = (Blocked<ID, R, A>) r;
                 return new Blocked<>(blocked.getRequests(), fmap(f, blocked.getFetch()));
             }
-            throw new RuntimeException("1");
+            throw new RuntimeException("unhandled type " + r.getClass());
         }, x.unFetch));
     }
 
@@ -79,7 +77,7 @@ public class Fetch<A> {
                 List<BlockedRequest<ID, R>> br = ListUtils.concat(br1, br2);
                 return IO.ret(new Blocked<>(br, ap(c, d)));
             }
-            throw new RuntimeException("neither Blocked nor done");
+            throw new RuntimeException("unhandled type (f_, x_) " + Tuple.tuple(f_.getClass(), x_.getClass()));
         })));
     }
 
@@ -154,7 +152,7 @@ public class Fetch<A> {
                 Fetch<A> cont = blocked.getFetch();
                 return IO.bind(fetch(br, ds), x -> runFetch(cont, ds));
             }
-            throw new RuntimeException("4");
+            throw new RuntimeException("unhandled type " + r.getClass());
         });
     }
 
