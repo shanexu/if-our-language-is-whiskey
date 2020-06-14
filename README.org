@@ -457,6 +457,8 @@ such as sequential or parallel map-reduce transformations.
     [[./imgs/java.png]]
     [[./imgs/haskell.png]]
 
+    [[https://github.com/Dobiasd/articles/blob/master/programming_language_learning_curves.md]]
+
 *** code written in Haskell is guaranteed to have no side effects
 
     [[./imgs/haskell_2x.png]]
