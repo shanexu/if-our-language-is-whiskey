@@ -5,14 +5,20 @@ import org.xusheng.ioliw.haxl.ListUtils;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static org.xusheng.ioliw.haxl2.Trampoline.done;
+import static org.xusheng.ioliw.haxl2.Trampoline.more;
 
 public class IO<T> {
     private final Trampoline<T> value;
 
-    public IO(Trampoline<T> value) {
+    private IO(Trampoline<T> value) {
         this.value = value;
+    }
+
+    private IO(Supplier<T> value) {
+        this(more(() -> done(value.get())));
     }
 
     public static <T> IO<T> ret(T t) {
@@ -20,11 +26,11 @@ public class IO<T> {
     }
 
     public static <T> IO<T> pure(T t) {
-        return new IO<>(done(t));
+        return new IO<>(() -> t);
     }
 
-    public static <T> IO<T> of(Trampoline<T> v) {
-        return new IO<>(v);
+    public static <T> IO<T> of(Supplier<T> s) {
+        return new IO<>(s);
     }
 
     public <B> IO<B> map(Function<T, B> f) {

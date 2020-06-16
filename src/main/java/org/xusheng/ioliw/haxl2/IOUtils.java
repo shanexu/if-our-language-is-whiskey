@@ -10,10 +10,10 @@ import static org.xusheng.ioliw.haxl2.Trampoline.more;
 public class IOUtils {
 
     public static IO<Void> printf(PrintStream s, String format, Object... args) {
-        return IO.of(more(() -> {
+        return IO.of(() -> {
             s.printf(format, args);
-            return done(null);
-        }));
+            return null;
+        });
     }
 
     public static IO<Void> printf(String format, Object... args) {
@@ -21,7 +21,7 @@ public class IOUtils {
     }
 
     public static IO<String> readLine(InputStream s) {
-        return IO.of(more(() -> done(new Scanner(s).nextLine())));
+        return IO.of(() -> new Scanner(s).nextLine());
     }
 
     public static IO<String> readLine() {

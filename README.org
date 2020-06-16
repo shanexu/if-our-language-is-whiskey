@@ -939,40 +939,30 @@ such as sequential or parallel map-reduce transformations.
      public class IO<T> {
          private final Trampoline<T> value;
 
-         public IO(Trampoline<T> value) {
+         private IO(Trampoline<T> value) {
              this.value = value;
          }
 
+         private IO(Supplier<T> value) {
+             this(more(() -> done(value.get())));
+         }
+
          public static <T> IO<T> ret(T t) {
-             return new IO<>(done(t));
+             return pure(t);
          }
 
-         public static <T> IO<T> of(Trampoline<T> v) {
-             return new IO<>(v);
+         public static <T> IO<T> pure(T t) {
+             return new IO<>(() -> t);
          }
 
-         public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> a) {
-             return new IO<>(a.value.map(f));
+         public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> fa) {
+             return new IO<>(fa.value.map(f));
          }
 
          public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
              return new IO<>(ma.value.flatMap(x -> func.apply(x).value));
          }
-     }
-     #+end_src
-
-**** 优化util
-
-     #+begin_src java
-     public static IO<Void> printf(PrintStream s, String format, Object... args) {
-         return IO.of(more(() -> {
-                     s.printf(format, args);
-                     return done(null);
-                 }));
-     }
-
-     public static IO<String> readLine(InputStream s) {
-         return IO.of(more(() -> done(new Scanner(s).nextLine())));
+         // ...
      }
      #+end_src
 
