@@ -30,6 +30,7 @@
    #+ATTR_ORG: :width 800
    [[./imgs/lambda_rainbow.png]]
 
+
 * Java函数式编程
 
   March 18, 2014
@@ -144,7 +145,8 @@ such as sequential or parallel map-reduce transformations.
 
 ** Optional
 
-   假设我们要追溯克隆羊的实验，我们想知道羊的基因历史，我们提供了 =father=, =mother= 方法用来查找羊的双亲，但是由于这些羊中有一些是克隆羊，所以这些羊不一定都有父母。
+   假设我们要追溯克隆羊的实验，我们想知道羊的基因历史，我们提供了 =father=, =mother= 方法用来查找羊的双亲，
+但是由于这些羊中有一些是克隆羊，所以这些羊不一定都有父母。
 
    #+begin_src java
    class Sheep {}
@@ -493,9 +495,11 @@ such as sequential or parallel map-reduce transformations.
 
 
 ** pure function
+
    在程序设计中，若一个函数符合以下要求，则它可能被认为是纯函数：
 
-   1. 此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出无关。
+   1. 此函数在相同的输入值时，需产生相同的输出。
+      函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出无关。
    2. 该函数不能有语义上可观察的函数副作用，诸如“触发事件”，使输出设备输出，或更改输出值以外物件的内容等。
 
    #+begin_src haskell
@@ -524,7 +528,14 @@ such as sequential or parallel map-reduce transformations.
    plus1 :: Int -> Int
    plus1 = plus 1
 
-   map plus1 [1,2,3]
+   multiply :: Int -> Int -> Int
+   multiply a b = a * b
+
+   multiply2 = multiply 2
+
+   plus1ThenMultiply2 = multiply2 . plus1
+
+   map plus1ThenMultiply2 [1,2,3]
    #+end_src
 
 ** lazy
@@ -635,6 +646,7 @@ such as sequential or parallel map-reduce transformations.
         They can be used to create imperative-style computational structures which remain safely isolated from the main body of the functional program.
         This is useful for incorporating side-effects (such as I/O) and state (which violates referential transparency) into a pure functional language like Haskell.
 
+
 * Haxl基于Monad的优雅的数据加载框架
   
   Haxl is a Haskell library that simplifies access to remote data, such as databases or web-based services. Haxl can automatically
@@ -649,7 +661,7 @@ such as sequential or parallel map-reduce transformations.
 ** make a plain
    
    假设几个数据之间依赖关系如下：
-   #+begin_src dot :exports results :file ./imgs/deps.png :cmdline -Kdot -Tpng
+   #+begin_src dot :exports results :file ./imgs/deps.png :cmdline -Kdot -Tpng :hidden
    digraph G {
      "A" -> "B"
      "A" -> "C"
@@ -664,7 +676,7 @@ such as sequential or parallel map-reduce transformations.
    [[file:./imgs/deps.png]]
 
    一种资源获取/计算的执行计划可以如下：
-   #+begin_src dot :exports results :file ./imgs/schedule.png :cmdline -Kdot -Tpng
+   #+begin_src dot :exports results :file ./imgs/schedule.png :cmdline -Kdot -Tpng :hidden
    digraph G {
      rankdir="LR";
      node [shape=box];
@@ -1360,15 +1372,18 @@ such as sequential or parallel map-reduce transformations.
   6. Category Theory for Programmers
      [[https://github.com/hmemcpy/milewski-ctfp-pdf]]
 
+
 * 关于标题
   《如果我们的语言是威士忌》是村上春树的游记，他的文字带着我们走上他独特视线的异国之旅。
 那异国的风土人情，远方香醇的威士忌，在他的笔下缓缓流出，流入读者心中，沁人心脾。
 
   [[file:./imgs/cover.jpg]]
 
+
 * 仓库地址
 
   [[https://github.com/shanexu/if-our-language-is-whiskey]]
+
 
 * Q & A
 
