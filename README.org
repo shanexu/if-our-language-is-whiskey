@@ -661,6 +661,56 @@ such as sequential or parallel map-reduce transformations.
      
   [[http://simonmar.github.io/bib/papers/haxl-icfp14.pdf][There is no Fork: An Abstraction for Efficient, Concurrent, and Concise Data Access]]
 
+** FunWithHaxl
+   
+   [[https://github.com/shanexu/FunWithHaxl]]
+
+   #+begin_src shell
+   stack setup
+   stack run
+   #+end_src
+
+   #+begin_src haskell
+   {-# LANGUAGE OverloadedStrings #-}
+
+   module Main where
+
+   import System.Environment
+   import qualified HaxlBlog as H
+   import qualified BlogDB as R
+
+   defaultDB = "blog.sqlite"
+
+   main :: IO ()
+   main = do
+     putStrLn "raw:"
+     R.run (R.getPostIds >>= mapM R.getPostContent) >>= print
+     putStrLn "haxl:"
+     H.run (H.getPostIds >>= mapM H.getPostContent) >>= print
+   #+end_src
+
+   #+begin_src text
+   raw:
+   select postid from postinfo;
+   select content from postcontent where postid = 1;
+   select content from postcontent where postid = 2;
+   select content from postcontent where postid = 3;
+   select content from postcontent where postid = 4;
+   select content from postcontent where postid = 5;
+   select content from postcontent where postid = 6;
+   select content from postcontent where postid = 7;
+   select content from postcontent where postid = 8;
+   select content from postcontent where postid = 9;
+   select content from postcontent where postid = 10;
+   select content from postcontent where postid = 11;
+   select content from postcontent where postid = 12;
+   ["example content 1","example content 2","example content 3","example content 4","example content 5","example content 6","example content 7","example content 8","example content 9","example content 10","example content 11","example content 12"]
+   haxl:
+   select postid from postinfo;
+   select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2,1);
+   ["example content 1","example content 2","example content 3","example content 4","example content 5","example content 6","example content 7","example content 8","example content 9","example content 10","example content 11","example content 12"]
+   #+end_src
+
 ** make a plain
    
    假设几个数据之间依赖关系如下：
@@ -691,6 +741,8 @@ such as sequential or parallel map-reduce transformations.
    [[file:./imgs/schedule.png]]
 
 ** scala fetch example
+
+   [[https://github.com/47degrees/fetch]]
 
    #+begin_src scala
    package org.xusheng.ioliw
