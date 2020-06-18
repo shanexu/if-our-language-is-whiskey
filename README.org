@@ -161,123 +161,125 @@ such as sequential or parallel map-reduce transformations.
    #+end_src
 
 
-   现在要定义函数 =maternalGrandfather= ，找羊的外祖父。
-   #+begin_src java
-   public static Sheep maternalGrandfather(Sheep s) {
-       Sheep m = mother(s);
-       if (m != null) {
-           return father(m);
-       }
-       return null
-   }
-   #+end_src
+*** 现在要定义函数 =maternalGrandfather= ，找羊的外祖父。
+    #+begin_src java
+    public static Sheep maternalGrandfather(Sheep s) {
+        Sheep m = mother(s);
+        if (m != null) {
+            return father(m);
+        }
+        return null
+    }
+    #+end_src
 
-   现在定义函数 =mothersPaternalGrandfather= 找羊的曾外祖父(妈的爸的爸)
-   #+begin_src java
-   public static Sheep mothersPaternalGrandfather(Sheep s) {
-       Sheep m = mother(s);
-       if (m != null) {
-           Sheep f = father(m);
-           if (f != null) {
-               return father(f);
-           }
-       }
-       return null;
-   }
-   #+end_src
+*** 现在定义函数 =mothersPaternalGrandfather= 找羊的曾外祖父(妈的爸的爸)
+    #+begin_src java
+    public static Sheep mothersPaternalGrandfather(Sheep s) {
+        Sheep m = mother(s);
+        if (m != null) {
+            Sheep f = father(m);
+            if (f != null) {
+                return father(f);
+            }
+        }
+        return null;
+    }
+    #+end_src
 
-   定义函数曾曾曾..........外祖父？
-   [[./imgs/if-hell.jpeg]]
+*** 定义函数曾曾曾..........外祖父？
+
+    [[./imgs/if-hell.jpeg]]
    
-   如果我们使用 =Optional=
+*** 如果我们使用 =Optional=
 
-   #+begin_src java
-   public static Optional<Sheep> fatherOpt(Sheep sheep) {
-       return Optional.ofNullable(father(sheep));
-   }
+    #+begin_src java
+    public static Optional<Sheep> fatherOpt(Sheep sheep) {
+        return Optional.ofNullable(father(sheep));
+    }
 
-   public static Optional<Sheep> motherOpt(Sheep sheep) {
-       return Optional.ofNullable(mother(sheep));
-   }
-   #+end_src
+    public static Optional<Sheep> motherOpt(Sheep sheep) {
+        return Optional.ofNullable(mother(sheep));
+    }
+    #+end_src
 
-   现在要定义函数 =maternalGrandfatherOpt= ，找羊的外祖父。
-   #+begin_src java
-   public static Optional<Sheep> maternalGrandfatherOpt(Sheep s) {
-       return motherOpt(s).flatMap(OptionalSample::fatherOpt);
-   }
-   #+end_src
+*** 现在要定义函数 =maternalGrandfatherOpt= ，找羊的外祖父。
+    #+begin_src java
+    public static Optional<Sheep> maternalGrandfatherOpt(Sheep s) {
+        return motherOpt(s).flatMap(OptionalSample::fatherOpt);
+    }
+    #+end_src
 
-   现在定义函数 =mothersPaternalGrandfatherOpt= 找羊的曾外祖父(妈的爸的爸)
-   #+begin_src java
-   public static Optional<Sheep> mothersPaternalGrandfatherOpt(Sheep s) {
-       return motherOpt(s)
-           .flatMap(OptionalSample::fatherOpt)
-           .flatMap(OptionalSample::fatherOpt);
-   }
-   #+end_src
+*** 现在定义函数 =mothersPaternalGrandfatherOpt= 找羊的曾外祖父(妈的爸的爸)
+    #+begin_src java
+    public static Optional<Sheep> mothersPaternalGrandfatherOpt(Sheep s) {
+        return motherOpt(s)
+            .flatMap(OptionalSample::fatherOpt)
+            .flatMap(OptionalSample::fatherOpt);
+    }
+    #+end_src
 
-   现在定义函数 =mothersFathersMothersFathersMotherOpt= 找羊的妈的爸的妈的爸的妈
-   #+begin_src java
-   public static Optional<Sheep> mothersFathersMothersFathersMotherOpt(Sheep s) {
-       return motherOpt(s)
-           .flatMap(OptionalSample::fatherOpt)
-           .flatMap(OptionalSample::motherOpt)
-           .flatMap(OptionalSample::fatherOpt)
-           .flatMap(OptionalSample::motherOpt);
-   }
-   #+end_src
+*** 现在定义函数 =mothersFathersMothersFathersMotherOpt= 找羊的妈的爸的妈的爸的妈
+    #+begin_src java
+    public static Optional<Sheep> mothersFathersMothersFathersMotherOpt(Sheep s) {
+        return motherOpt(s)
+            .flatMap(OptionalSample::fatherOpt)
+            .flatMap(OptionalSample::motherOpt)
+            .flatMap(OptionalSample::fatherOpt)
+            .flatMap(OptionalSample::motherOpt);
+    }
+    #+end_src
 
 ** Working with Resources
 
-   resource
+*** resource
+    
+    #+begin_src java
+    FileWriterEAM.use("test.txt", writer -> writer.writeStuff("hello world!"));
 
-   #+begin_src java
-   FileWriterEAM.use("test.txt", writer -> writer.writeStuff("hello world!"));
+    class FileWriterEAM {
+        public static void use(
+                               final String fileName,
+                               final UseInstance<FileWriterEAM, IOException> block
+                               ) throws IOException {
+            final FileWriterEAM writerEAM = new FileWriterEAM(fileName);
+            try {
+                block.accept(writerEAM);
+            } finally {
+                writerEAM.close();
+            }
+        }
 
-   class FileWriterEAM {
-       public static void use(
-                              final String fileName,
-                              final UseInstance<FileWriterEAM, IOException> block
-                              ) throws IOException {
-           final FileWriterEAM writerEAM = new FileWriterEAM(fileName);
-           try {
-               block.accept(writerEAM);
-           } finally {
-               writerEAM.close();
-           }
-       }
+        private final FileWriter writer;
+        private FileWriterEAM(final String fileName) throws IOException {
+            writer = new FileWriter(fileName);
+        }
+        private void close() throws IOException {
+            System.out.println("close called automatically...");
+            writer.close(); }
+        public void writeStuff(final String message) throws IOException {
+            writer.write(message);
+        }
+    }
+    #+end_src
 
-       private final FileWriter writer;
-       private FileWriterEAM(final String fileName) throws IOException {
-           writer = new FileWriter(fileName);
-       }
-       private void close() throws IOException {
-           System.out.println("close called automatically...");
-           writer.close(); }
-       public void writeStuff(final String message) throws IOException {
-           writer.write(message);
-       }
-   }
-   #+end_src
+*** lock
 
-   lock
-   #+begin_src java
-   class Locker {
-       public static void runLocked(Lock lock, Runnable block) {
-           lock.lock();
-           try {
-               block.run();
-           } finally {
-               lock.unlock();
-           }
-       }
-   }
+    #+begin_src java
+    class Locker {
+        public static void runLocked(Lock lock, Runnable block) {
+            lock.lock();
+            try {
+                block.run();
+            } finally {
+                lock.unlock();
+            }
+        }
+    }
 
-   public void doOp1() {
-       runLocked(lock, () -> {/*...critical code ... */});
-   }
-   #+end_src
+    public void doOp1() {
+        runLocked(lock, () -> {/*...critical code ... */});
+    }
+    #+end_src
 
 ** Optimizing Recursions
 
@@ -526,7 +528,7 @@ such as sequential or parallel map-reduce transformations.
    plus a b = a + b
 
    plus1 :: Int -> Int
-   plus1 = plus 1
+   plus1 = plus 1 -- Currying
 
    multiply :: Int -> Int -> Int
    multiply a b = a * b
@@ -535,7 +537,9 @@ such as sequential or parallel map-reduce transformations.
 
    plus1ThenMultiply2 = multiply2 . plus1
 
-   map plus1ThenMultiply2 [1,2,3]
+   map plus1ThenMultiply2 [1, 2, 3]
+
+   map (\i -> ( i + 1) * 2) [1, 2, 3]
    #+end_src
 
 ** lazy
@@ -562,7 +566,6 @@ such as sequential or parallel map-reduce transformations.
     class Functor f where
         fmap :: (a -> b) -> f a -> f b
     #+end_src
-
 
 *** Applicative
 
@@ -945,6 +948,21 @@ such as sequential or parallel map-reduce transformations.
       #+end_src
 
 ***** FlatMap
+
+      #+begin_src scala :hidden
+      final def resume: Either [() => Trampoline[A], A] =
+        this match {
+          case Done(v) => Right(v)
+          case More(k) => Left(k)
+          case FlatMap(a, f) => a match {
+            case Done(v) => f(v).resume
+            case More(k) => Left(() =>
+              FlatMap(k(), f))
+            case FlatMap(b, g) =>
+              (FlatMap(b, (x: Any) => FlatMap(g(x), f) ): Trampoline[A]).resume
+          }
+        }
+      #+end_src
       
       #+begin_src java
       @AllArgsConstructor
@@ -1060,6 +1078,11 @@ such as sequential or parallel map-reduce transformations.
 
 **** Request & BlockedRequest
 
+     #+begin_src haskell
+     data BlockedRequest =
+       forall a . BlockedRequest (Request a) (IORef (FetchStatus a))
+     #+end_src
+
      #+begin_src java
      @AllArgsConstructor
      @EqualsAndHashCode
@@ -1077,6 +1100,10 @@ such as sequential or parallel map-reduce transformations.
      #+end_src
 
 **** FetchStatus
+
+     #+begin_src haskell
+     data FetchStatus a = NotFetched | FetchSuccess a
+     #+end_src
      
      #+begin_src java
      public interface FetchStatus<A> {
@@ -1117,6 +1144,12 @@ such as sequential or parallel map-reduce transformations.
 
 **** Result
 
+     #+begin_src haskell
+     data Result a
+       = Done a
+       | Blocked (Seq BlockedRequest) (Fetch a)
+     #+end_src
+
      #+begin_src java
      public interface Result<A> {
          @AllArgsConstructor
@@ -1137,6 +1170,11 @@ such as sequential or parallel map-reduce transformations.
 **** Fetch
 
      Fetch只是一个简单的带有类型为IO<Result<A>>字段的类。
+
+     #+begin_src haskell
+     newtype Fetch a = Fetch { unFetch :: IO (Result a) }
+     #+end_src
+     
      #+begin_src java
      @AllArgsConstructor
      @Getter
@@ -1374,6 +1412,7 @@ such as sequential or parallel map-reduce transformations.
 
 
 * 关于标题
+
   《如果我们的语言是威士忌》是村上春树的游记，他的文字带着我们走上他独特视线的异国之旅。
 那异国的风土人情，远方香醇的威士忌，在他的笔下缓缓流出，流入读者心中，沁人心脾。
 
