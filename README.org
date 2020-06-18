@@ -651,6 +651,8 @@ such as sequential or parallel map-reduce transformations.
 
 
 * Haxl基于Monad的优雅的数据加载框架
+
+  [[./imgs/haxl-logo.png]]
   
   Haxl is a Haskell library that simplifies access to remote data, such as databases or web-based services. Haxl can automatically
 
@@ -742,6 +744,7 @@ such as sequential or parallel map-reduce transformations.
 
 ** scala fetch example
 
+   [[./imgs/fetch-logo.svg]] FETCH
    [[https://github.com/47degrees/fetch]]
 
    #+begin_src scala
