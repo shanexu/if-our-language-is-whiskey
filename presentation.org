@@ -299,3 +299,138 @@
         .reduce((name1, name2) ->
                 name1.length() >= name2.length() ? name1 : name2);
     #+end_src
+
+** optional
+
+   Java SE 8 introduces a new class called =java.util.Optional<T>= that is inspired from the ideas of Haskell (=Maybe t=) and Scala (=Option[T]=). It is a class that encapsulates an optional value. You can view =Optional= as a single-value container that either contains a value or doesn't (it is then said to be "empty").
+
+   [[./imgs/optional.gif]]
+
+   #+REVEAL: split
+
+   #+begin_quote
+   you are not a real Java programmer until you've dealt with a null pointer exception
+   #+end_quote
+
+   
+*** 一个例子
+    
+    假设我们要追溯克隆羊的实验，我们想知道羊的基因历史，我们提供了 =father=, =mother= 方法用来查找羊的双亲，但是由于这些羊中有一些是克隆羊，所以这些羊不一定都有父母。
+
+    #+begin_src java
+    class Sheep {}
+
+    public static Sheep father(Sheep sheep) {
+        // ...
+    }
+
+    public static Sheep mother(Sheep sheep) {
+        // ...
+    }
+    #+end_src
+
+*** 定义函数 =maternalGrandfather= ，找羊的外祖父
+    #+begin_src java
+    public static Sheep maternalGrandfather(Sheep s) {
+        Sheep m = mother(s);
+        if (m != null) {
+            return father(m);
+        }
+        return null;
+    }
+    #+end_src
+
+*** 定义函数 =mothersPaternalGrandfather= 找羊的曾外祖父(妈的爸的爸)
+    #+begin_src java
+    public static Sheep mothersPaternalGrandfather(Sheep s) {
+        Sheep m = mother(s);
+        if (m != null) {
+            Sheep f = father(m);
+            if (f != null) {
+                return father(f);
+            }
+        }
+        return null;
+    }
+    #+end_src
+
+*** 定义函数曾曾曾..........外祖父？
+
+    #+ATTR_REVEAL: :frag t
+    #+ATTR_ORG: :width 400
+    [[./imgs/if-hell.jpeg]]
+
+*** 如果我们使用 =Optional=
+    
+    #+begin_src java
+    public static Optional<Sheep> fatherOpt(Sheep sheep) {
+        return Optional.ofNullable(father(sheep));
+    }
+
+    public static Optional<Sheep> motherOpt(Sheep sheep) {
+        return Optional.ofNullable(mother(sheep));
+    }
+    #+end_src
+
+*** 定义函数 =maternalGrandfatherOpt= ，找羊的外祖父
+
+    #+begin_src java
+    public static Optional<Sheep> maternalGrandfatherOpt(Sheep s) {
+        return motherOpt(s).flatMap(OptionalSample::fatherOpt);
+    }
+    #+end_src
+
+*** 现在定义函数 =mothersPaternalGrandfatherOpt= 找羊的曾外祖父(妈的爸的爸)
+    
+    #+begin_src java
+    public static Optional<Sheep> mothersPaternalGrandfatherOpt(Sheep s) {
+        return motherOpt(s)
+            .flatMap(OptionalSample::fatherOpt)
+            .flatMap(OptionalSample::fatherOpt);
+    }
+    #+end_src
+
+    
+*** 现在定义函数 =mothersFathersMothersFathersMotherOpt= 找羊的妈的爸的妈的爸的妈
+
+    #+begin_src java
+    public static Optional<Sheep> mothersFathersMothersFathersMotherOpt(Sheep s) {
+        return motherOpt(s)
+            .flatMap(OptionalSample::fatherOpt)
+            .flatMap(OptionalSample::motherOpt)
+            .flatMap(OptionalSample::fatherOpt)
+            .flatMap(OptionalSample::motherOpt);
+    }
+    #+end_src
+
+** working with resources
+
+   #+ATTR_REVEAL: :frag t
+   #+begin_src java
+   interface RedisOperation<T> {
+       T run(Jedis jedis);
+   }
+   #+end_src
+
+   #+ATTR_REVEAL: :frag t
+   #+begin_src java
+   class JedisPoolWrapper {
+       private final JedisPool pool;
+       public JedisPoolWrapper(JedisPool pool) {
+           this.pool = pool;
+       }
+       public <T> T run(RedisOperation<T> operation) {
+           Jedis resource = pool.getResource();
+           try {
+               return operation.run(resource);
+           } finally {
+               pool.returnResource(resource);
+           }
+       }
+   }
+   #+end_src
+
+   #+ATTR_REVEAL: :frag t
+   #+begin_src java
+   jedisPoolWrapper.run(jedis -> jedis.get("hello.world"));
+   #+end_src

@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-13 Sun 16:03</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-13 Sun 18:01</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -405,6 +405,183 @@ for (String name : friends) {
 Optional&lt;String&gt; longestName = friends.stream()
     .reduce((name1, name2) -&gt;
             name1.length() &gt;= name2.length() ? name1 : name2);
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-2">
+<h3 id="2-2"><span class="section-number-3">2.2</span> optional</h3>
+<p>
+Java SE 8 introduces a new class called <code>java.util.Optional&lt;T&gt;</code> that is inspired from the ideas of Haskell (<code>Maybe t</code>) and Scala (<code>Option[T]</code>). It is a class that encapsulates an optional value. You can view <code>Optional</code> as a single-value container that either contains a value or doesn't (it is then said to be "empty").
+</p>
+
+
+<div class="figure">
+<p><img src="./imgs/optional.gif" alt="optional.gif" />
+</p>
+</div>
+
+</section>
+<section>
+
+<blockquote>
+<p>
+you are not a real Java programmer until you've dealt with a null pointer exception
+</p>
+</blockquote>
+
+
+</section>
+<section id="slide-2-2-1">
+<h4 id="2-2-1"><span class="section-number-4">2.2.1</span> 一个例子</h4>
+<p>
+假设我们要追溯克隆羊的实验，我们想知道羊的基因历史，我们提供了 <code>father</code>, <code>mother</code> 方法用来查找羊的双亲，但是由于这些羊中有一些是克隆羊，所以这些羊不一定都有父母。
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >class Sheep {}
+
+public static Sheep father(Sheep sheep) {
+    // ...
+}
+
+public static Sheep mother(Sheep sheep) {
+    // ...
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-2-2">
+<h4 id="2-2-2"><span class="section-number-4">2.2.2</span> 定义函数 <code>maternalGrandfather</code> ，找羊的外祖父</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static Sheep maternalGrandfather(Sheep s) {
+    Sheep m = mother(s);
+    if (m != null) {
+        return father(m);
+    }
+    return null;
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-2-3">
+<h4 id="2-2-3"><span class="section-number-4">2.2.3</span> 定义函数 <code>mothersPaternalGrandfather</code> 找羊的曾外祖父(妈的爸的爸)</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static Sheep mothersPaternalGrandfather(Sheep s) {
+    Sheep m = mother(s);
+    if (m != null) {
+        Sheep f = father(m);
+        if (f != null) {
+            return father(f);
+        }
+    }
+    return null;
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-2-4">
+<h4 id="2-2-4"><span class="section-number-4">2.2.4</span> 定义函数曾曾曾&#x2026;&#x2026;&#x2026;.外祖父？</h4>
+
+<div class="figure">
+<p><img src="./imgs/if-hell.jpeg" alt="if-hell.jpeg" class="fragment" />
+</p>
+</div>
+
+</section>
+<section id="slide-2-2-5">
+<h4 id="2-2-5"><span class="section-number-4">2.2.5</span> 如果我们使用 <code>Optional</code></h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static Optional&lt;Sheep&gt; fatherOpt(Sheep sheep) {
+    return Optional.ofNullable(father(sheep));
+}
+
+public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
+    return Optional.ofNullable(mother(sheep));
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-2-6">
+<h4 id="2-2-6"><span class="section-number-4">2.2.6</span> 定义函数 <code>maternalGrandfatherOpt</code> ，找羊的外祖父</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static Optional&lt;Sheep&gt; maternalGrandfatherOpt(Sheep s) {
+    return motherOpt(s).flatMap(OptionalSample::fatherOpt);
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-2-7">
+<h4 id="2-2-7"><span class="section-number-4">2.2.7</span> 现在定义函数 <code>mothersPaternalGrandfatherOpt</code> 找羊的曾外祖父(妈的爸的爸)</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static Optional&lt;Sheep&gt; mothersPaternalGrandfatherOpt(Sheep s) {
+    return motherOpt(s)
+        .flatMap(OptionalSample::fatherOpt)
+        .flatMap(OptionalSample::fatherOpt);
+}
+</code></pre>
+</div>
+
+
+</section>
+<section id="slide-2-2-8">
+<h4 id="2-2-8"><span class="section-number-4">2.2.8</span> 现在定义函数 <code>mothersFathersMothersFathersMotherOpt</code> 找羊的妈的爸的妈的爸的妈</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static Optional&lt;Sheep&gt; mothersFathersMothersFathersMotherOpt(Sheep s) {
+    return motherOpt(s)
+        .flatMap(OptionalSample::fatherOpt)
+        .flatMap(OptionalSample::motherOpt)
+        .flatMap(OptionalSample::fatherOpt)
+        .flatMap(OptionalSample::motherOpt);
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-3">
+<h3 id="2-3"><span class="section-number-3">2.3</span> working with resources</h3>
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" java" >interface RedisOperation&lt;T&gt; {
+    T run(Jedis jedis);
+}
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" java" >class JedisPoolWrapper {
+    private final JedisPool pool;
+    public JedisPoolWrapper(JedisPool pool) {
+        this.pool = pool;
+    }
+    public &lt;T&gt; T run(RedisOperation&lt;T&gt; operation) {
+        Jedis resource = pool.getResource();
+        try {
+            return operation.run(resource);
+        } finally {
+            pool.returnResource(resource);
+        }
+    }
+}
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" java" >jedisPoolWrapper.run(jedis -&gt; jedis.get("hello.world"));
 </code></pre>
 </div>
 </section>
