@@ -1,6 +1,6 @@
 #+TITLE:       如果我们的语言是威士忌——函数式编程初窥
 #+AUTHOR:      Xu Sheng
-#+EMAIL:       sheng.xu@tongdun.net
+#+EMAIL:       xusheng0711@gmail.com
 #+DATE:        2020-06-01
 
 * 前言
@@ -125,6 +125,12 @@ such as sequential or parallel map-reduce transformations.
 *** Reducing a Collection to a Single Value
 
     #+begin_src java
+    U accumulator = identity;
+    for (T t : listOfT) {
+        U newAccumulator = accumulator(t, accumulator);
+        accumulator = combiner(accumulator, newAccumulator);
+    }
+
     T reduce(T identity, BinaryOperator<T> accumulator);
     Optional<T> reduce(BinaryOperator<T> accumulator);
     <U> U reduce(U identity, BiFunction<U, ? super T, U> accumulator, BinaryOperator<U> combiner);

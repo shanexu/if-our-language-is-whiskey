@@ -1,0 +1,275 @@
+#+TITLE:       如果我们的语言是威士忌——函数式编程初窥
+#+AUTHOR:      Xu Sheng
+#+EMAIL:       sheng.xu@sumscope.com
+#+DATE:        2020-09-12
+#+OPTIONS:     toc:1 reveal_single_file:nil reveal_history:t reveal_width:1200 reveal_height:800
+
+#+REVEAL_ROOT:              ./reveal.js-4.0.2
+#+REVEAL_REVEAL_JS_VERSION: 4
+#+REVEAL_THEME:             black
+#+REVEAL_PLUGINS:           (highlight)
+#+REVEAL_EXTRA_CSS:         ./presentation.css
+
+
+* 前言
+
+  * Java8引入的“新”特性
+  * Haskell
+  * 函数复合、高阶函数、懒惰求值、不可变数据
+  * 纯函数、副作用、函子、应用函子、单子
+
+** 费曼的彩虹
+
+   #+begin_quote
+   “那你觉得彩虹的哪一个特色，让笛卡儿产生做数学分析的灵感？” \\
+   “其实彩虹是圆锥体的一段，当水滴被来自观察者后方的光线照射时，会呈现出弧状的光谱颜色。我想他的灵感来自于他发现可以藉由思考单一的水滴，以及它的几何位置来分析这个问题。”\\
+   #+end_quote
+
+   #+REVEAL: split
+
+   #+begin_quote
+   “我会说他的灵感来自于他认为彩虹很美。”\\
+
+   《费曼的彩虹:物理大师的最后24堂课》
+   #+end_quote
+
+   
+** Lambda
+   
+   #+ATTR_ORG: :width 800
+   #+ATTR_HTML: :style width: 75%;
+   [[./imgs/lambda_rainbow.png]]
+
+* Java函数式编程
+
+  #+begin_quote
+  March 18, 2014
+  #+end_quote
+
+  #+REVEAL: split
+
+  #+begin_quote
+  Java Programming Language
+
+  1. Lambda Expressions, a new language feature, has been introduced in this release. 
+  2. Method references provide easy-to-read lambda expressions for methods that already have a name.
+  #+end_quote
+
+  #+REVEAL: split
+
+  #+begin_quote
+  Collections
+  
+  1. Classes in the new java.util.stream package provide a Stream API to support functional-style operations on streams of elements. 
+  #+end_quote
+
+** stream
+
+*** Iterating through a List
+
+    #+begin_src java
+    for(T t : listOfT) {
+        // do something
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    void forEach(Consumer<? super T> action);
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    final List<String> friends =
+        Arrays.asList("Brian", "Nate", "Neal", "Raju", "Sara", "Scott");
+
+    for(String name : friends) {
+        System.out.println(name);
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    friends.forEach((final String name) -> System.out.println(name));
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    friends.forEach((name) -> System.out.println(name));
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style    
+    #+begin_src java
+    friends.forEach(name -> System.out.println(name));
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    friends.forEach(System.out::println);
+    #+end_src
+
+*** Transforming a List
+    
+    #+begin_src java
+    List<R> listOfR = new ArrayList<>();
+    for(T t : listOfT) {
+        R r = map(t);
+        listOfR.put(r);
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    <R> Stream<R> map(Function<? super T, ? extends R> mapper);
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    final List<String> uppercaseNames = new ArrayList<String>();
+    for(String name : friends) {
+        uppercaseNames.add(name.toUpperCase());
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    final List<String> uppercaseNames = new ArrayList<String>();
+    friends.forEach(name -> uppercaseNames.add(name.toUpperCase()));
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    friends.stream().map(name -> name.toUpperCase());
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    friends.stream().map(String::toUpperCase);
+    #+end_src
+
+*** Finding Elements
+
+    #+begin_src java
+    List filteredListOfT = new LinkedList<>();
+    for(T t : listOfT) {
+        if (predicate(t)) {
+            filteredListOfT.add(t);
+        }
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    Stream<T> filter(Predicate<? super T> predicate);
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    final List<String> startsWithN = new ArrayList<String>();
+    for(String name : friends) {
+        if(name.startsWith("N")) {
+            startsWithN.add(name);
+        }
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    final List<String> startsWithN = friends.stream()
+        .filter(name -> name.startsWith("N")).collect(Collectors.toList());
+    #+end_src
+
+*** Reducing a Collection to a Single Value
+
+    #+begin_src java
+    T result = null;
+    for (int i = 0; i < listOfT.size(); i++) {
+        T t = listOfT.get(i);
+        if (i == 0) {
+            result = t;
+            continue;
+        }
+        result = accumulator(t, result);
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    Optional<T> reduce(BinaryOperator<T> accumulator);
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    T result = identity;
+    for (T t : listOfT) {
+        result = accumulator(t, result);
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag frag-style
+    #+begin_src java
+    T reduce(T identity, BinaryOperator<T> accumulator);
+    #+end_src
+    
+    #+REVEAL: split
+
+    #+begin_src java
+    U result = identity;
+    for (T t : listOfT) {
+        U partialResult = accumulator(t, result);
+        result = combiner(result, partialResult);
+    }
+    #+end_src
+    
+    #+ATTR_REVEAL: :frag t
+    #+begin_src java
+    <U> U reduce(U identity,
+                 BiFunction<U, ? super T, U> accumulator,
+                 BinaryOperator<U> combiner);
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    Map<Long, User> userMap = Maps.newHashMap();
+    for (User user : users) {
+        userMap.put(user.getId(), user);
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+begin_src java
+    users.stream().reduce(
+                          Collections.emptyMap(),
+                          (Map<Long, User> acc, User user) -> {
+                              acc.put(user.getId(), user);
+                              return acc;
+                          }, (acc1, acc2) -> {
+                              acc1.putAll(acc2);
+                              return acc1;
+                          });
+    #+end_src
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+begin_src java
+    users.stream().reduce(
+                          Collections.emptyMap(),
+                          (Map<Long, User> acc, User user) -> {
+                              HashMap<Long, User> newAcc = Maps.newHashMap(acc);
+                              newAcc.put(user.getId(), user);
+                              return newAcc;
+                          }, (acc1, acc2) -> {
+                              HashMap<Long, User> newAcc = Maps.newHashMap(acc1);
+                              newAcc.putAll(acc2);
+                              return newAcc;
+                          });
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src java
+    users.stream().collect(Collectors.toMap(User::getId, Function.identity()));
+    #+end_src
