@@ -273,3 +273,29 @@
     #+begin_src java
     users.stream().collect(Collectors.toMap(User::getId, Function.identity()));
     #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    List<String> friends = ...;
+
+    Optional<String> longestName = Optional.empty();
+    for (String name : friends) {
+        if (!longestName.isPresent()) {
+            longestName = Optional.of(name);
+            continue;
+        }
+        if (name.length() >= longestName.get().length()) {
+            longestName = Optional.of(name);
+        }
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src java
+    List<String> friends = ...;
+
+    Optional<String> longestName = friends.stream()
+        .reduce((name1, name2) ->
+                name1.length() >= name2.length() ? name1 : name2);
+    #+end_src

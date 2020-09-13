@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-13 Sun 15:27</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-13 Sun 16:03</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -375,6 +375,36 @@ for (User user : users) {
 <div class="org-src-container">
 
 <pre class="fragment"><code class=" java" >users.stream().collect(Collectors.toMap(User::getId, Function.identity()));
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >List&lt;String&gt; friends = ...;
+
+Optional&lt;String&gt; longestName = Optional.empty();
+for (String name : friends) {
+    if (!longestName.isPresent()) {
+        longestName = Optional.of(name);
+        continue;
+    }
+    if (name.length() &gt;= longestName.get().length()) {
+        longestName = Optional.of(name);
+    }
+}
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" java" >List&lt;String&gt; friends = ...;
+
+Optional&lt;String&gt; longestName = friends.stream()
+    .reduce((name1, name2) -&gt;
+            name1.length() &gt;= name2.length() ? name1 : name2);
 </code></pre>
 </div>
 </section>

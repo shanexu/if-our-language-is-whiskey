@@ -22,8 +22,6 @@ public class ReduceSamples {
                 }
                 result = accumulator(t, result);
             }
-
-            IntStream.of(1, 2, 3).sum();
         }
 
         public <T> T accumulator(T t1, T t2) {
@@ -42,6 +40,29 @@ public class ReduceSamples {
 
         public <T> T accumulator(T t1, T t2) {
             return null;
+        }
+
+        public void sample() {
+            List<String> friends = new ArrayList<>();
+
+            Optional<String> longestName = Optional.empty();
+            for (String name : friends) {
+                if (!longestName.isPresent()) {
+                    longestName = Optional.of(name);
+                    continue;
+                }
+                if (name.length() >= longestName.get().length()) {
+                    longestName = Optional.of(name);
+                }
+            }
+        }
+
+        public void sample2() {
+            List<String> friends = new ArrayList<>();
+
+            Optional<String> longestName = friends.stream()
+                .reduce((name1, name2) ->
+                    name1.length() >= name2.length() ? name1 : name2);
         }
     }
 
