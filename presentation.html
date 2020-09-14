@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-14 Mon 11:02</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-14 Mon 13:53</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -29,6 +29,11 @@
 <li><a href="#/slide-2">2. Java函数式编程</a></li>
 <li><a href="#/slide-3">3. Haskell函数式编程语言</a></li>
 <li><a href="#/slide-4">4. Haxl</a></li>
+<li><a href="#/slide-5">5. 参考文档</a></li>
+<li><a href="#/slide-6">6. 关于标题</a></li>
+<li><a href="#/slide-7">7. 仓库地址</a></li>
+<li><a href="#/slide-8">8. Q &amp; A</a></li>
+<li><a href="#/slide-9">9. THANKS</a></li>
 </ul>
 </div>
 </div>
@@ -1374,6 +1379,169 @@ Sorry, your browser does not support SVG.</object>
 <p>
 <a href="https://github.com/47degrees/fetch">https://github.com/47degrees/fetch</a>
 </p>
+
+</section>
+<section id="slide-4-3-1">
+<h4 id="4-3-1"><span class="section-number-4">4.3.1</span> 一个例子</h4>
+<div class="org-src-container">
+
+<pre><code class=" scala" data-line-numbers>package org.xusheng.ioliw
+
+import cats.data.NonEmptyList
+import cats.effect._
+import cats.instances.list._
+import cats.syntax.all._
+import fetch._
+
+object sample {
+  type NodeName = String
+
+  case class Node(name: NodeName)
+
+  case class Dep(name: NodeName, deps: List[NodeName])
+
+  def latency[F[_] : Concurrent](msg: String): F[Unit] =
+    for {
+      _ &lt;- Sync[F].delay(println(s"--&gt; [${Thread.currentThread.getId}] $msg"))
+      _ &lt;- Sync[F].delay(Thread.sleep(1000))
+      _ &lt;- Sync[F].delay(println(s"&lt;-- [${Thread.currentThread.getId}] $msg"))
+    } yield ()
+
+  val nodeDatabase: Map[NodeName, Node] = Map(
+    "A" -&gt; Node("A"),
+    "B" -&gt; Node("B"),
+    "C" -&gt; Node("C"),
+    "D" -&gt; Node("D"),
+    "E" -&gt; Node("E"),
+    "F" -&gt; Node("F")
+  )
+
+  object Nodes extends Data[NodeName, Node] {
+    def name = "Nodes"
+
+    def source[F[_] : ConcurrentEffect]: DataSource[F, NodeName, Node] = new DataSource[F, NodeName, Node] {
+      override def data = Nodes
+
+      override def CF = ConcurrentEffect[F]
+
+      override def fetch(id: NodeName): F[Option[Node]] =
+        latency[F](s"One Node $id") &gt;&gt; CF.pure(nodeDatabase.get(id))
+
+      // override def maxBatchSize: Option[Int] = Some(2)
+
+      override def batchExecution: BatchExecution = InParallel
+
+      override def batch(ids: NonEmptyList[NodeName]): F[Map[NodeName, Node]] =
+        latency[F](s"Batch Nodes $ids") &gt;&gt; CF.pure(nodeDatabase.filterKeys(ids.toList.toSet))
+    }
+  }
+
+  def getNode[F[_] : ConcurrentEffect](id: NodeName): Fetch[F, Node] =
+    Fetch(id, Nodes.source)
+
+  def getGraph[F[_] : ConcurrentEffect](id: NodeName, deps: Map[NodeName, List[NodeName]]): Fetch[F, Node] =
+    for {
+      _ &lt;- deps.get(id).map {
+        ids =&gt; ids.traverse(i =&gt; getGraph(i, deps))
+      }.getOrElse(Fetch.pure[F, List[Node]](List.empty))
+      n &lt;- getNode(id)
+    } yield n
+
+  def main(args: Array[String]): Unit = {
+    import java.util.concurrent._
+
+    import scala.concurrent.ExecutionContext
+    import scala.concurrent.duration._
+
+    val executor = new ScheduledThreadPoolExecutor(4)
+    val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
+
+    implicit val timer: Timer[IO] = IO.timer(executionContext)
+    implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
+
+
+    val deps = Map(
+      "A" -&gt; List("B", "C"),
+      "B" -&gt; List("D", "E"),
+      "C" -&gt; List("E", "F"),
+    )
+
+    Fetch.run[IO](getGraph("A", deps)).unsafeRunTimed(10.seconds)
+
+    executor.shutdown()
+  }
+}
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre><code class=" text" >--&gt; [19] Batch Nodes NonEmptyList(D, E, F)
+&lt;-- [19] Batch Nodes NonEmptyList(D, E, F)
+--&gt; [21] Batch Nodes NonEmptyList(B, C)
+&lt;-- [21] Batch Nodes NonEmptyList(B, C)
+--&gt; [19] One Node A
+&lt;-- [19] One Node A
+</code></pre>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-5">
+<h2 id="5"><span class="section-number-2">5</span> 参考文档</h2>
+<ol>
+<li>Why Functional Programming Matters<br />
+<a href="https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf">https://www.cs.kent.ac.uk/people/staff/dat/miranda/whyfp90.pdf</a></li>
+<li>All About Monads<br />
+<a href="https://wiki.haskell.org/All_About_Monads">https://wiki.haskell.org/All_About_Monads</a></li>
+<li>Stackless Scala With Free Monads<br />
+<a href="http://blog.higher-order.com/assets/trampolines.pdf">http://blog.higher-order.com/assets/trampolines.pdf</a></li>
+<li>There is no Fork: an Abstraction for Efficient, Concurrent, and Concise Data Access<br />
+<a href="http://simonmar.github.io/bib/papers/haxl-icfp14.pdf">http://simonmar.github.io/bib/papers/haxl-icfp14.pdf</a></li>
+<li>Real World Haskell<br />
+<a href="http://book.realworldhaskell.org/read/">http://book.realworldhaskell.org/read/</a></li>
+<li>Category Theory for Programmers<br />
+<a href="https://github.com/hmemcpy/milewski-ctfp-pdf">https://github.com/hmemcpy/milewski-ctfp-pdf</a></li>
+
+</ol>
+
+
+</section>
+</section>
+<section>
+<section id="slide-6">
+<h2 id="6"><span class="section-number-2">6</span> 关于标题</h2>
+<p>
+《如果我们的语言是威士忌》是村上春树的游记，他的文字带着我们走上他独特视线的异国之旅。那异国的风土人情，远方香醇的威士忌，在他的笔下缓缓流出，流入读者心中，沁人心脾。
+</p>
+
+
+<div class="figure">
+<p><img src="./imgs/cover.jpg" alt="cover.jpg" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-7">
+<h2 id="7"><span class="section-number-2">7</span> 仓库地址</h2>
+<p>
+<a href="https://github.com/shanexu/if-our-language-is-whiskey">https://github.com/shanexu/if-our-language-is-whiskey</a>
+</p>
+
+</section>
+</section>
+<section>
+<section id="slide-8">
+<h2 id="8"><span class="section-number-2">8</span> Q &amp; A</h2>
+
+</section>
+</section>
+<section>
+<section id="slide-9">
+<h2 id="9"><span class="section-number-2">9</span> THANKS</h2>
 </section>
 </section>
 </div>
