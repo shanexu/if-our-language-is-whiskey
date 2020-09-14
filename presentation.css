@@ -16,3 +16,50 @@
   position: absolute;
   width: 100%;
 }
+
+#slide-2-4-1 + section + section div:first-child {
+  position: relative;
+}
+
+#slide-2-4-1 + section + section div:nth-child(2) {
+  position: absolute;
+  width: 100%;
+}
+
+#slide-2-4-1 + section + section div:nth-child(3) {
+  position: absolute;
+  width: 100%;
+}
+
+#slide-2-4-1 div.org-src-container pre {
+  height: 610px;
+}
+
+#slide-2-4-2 div.org-src-container pre {
+  height: 580px;
+}
+
+#slide-2-4-3 + section div.org-src-container:first-child pre {
+  height: 530px;
+}
+
+#slide-2-4-3 + section + section + section div.org-src-container:first-child pre {
+  height: 720px;
+}
+
+#slide-2-4-3 + section + section + section + section div.org-src-container:first-child pre {
+  height: 670px;
+}
+
+#slide-2-4-3 + section + section + section + section + section div.org-src-container:first-child pre {
+  height: 580px;
+}
+
+#slide-3-1-2 h3 {
+  position: relative;
+}
+
+#slide-3-1-2 div {
+  position: absolute;
+  width: 100%;
+}

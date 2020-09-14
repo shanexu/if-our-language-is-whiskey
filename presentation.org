@@ -37,7 +37,7 @@
 ** Lambda
    
    #+ATTR_ORG: :width 800
-   #+ATTR_HTML: :style width: 75%;
+   #+ATTR_HTML: :style width: 70%;
    [[./imgs/lambda_rainbow.png]]
 
 * Java函数式编程
@@ -434,3 +434,397 @@
    #+begin_src java
    jedisPoolWrapper.run(jedis -> jedis.get("hello.world"));
    #+end_src
+
+** optimizing recursions
+
+   
+*** Tail-Call Optimization (TCO)
+
+    #+begin_src c
+    #include <stdio.h>
+
+    int even(int n);
+    int odd(int n);
+
+    int even(int n) {
+      if (n == 0) {
+        return 1;
+      }
+      return odd(n - 1);
+    }
+
+    int odd(int n) {
+      if (n == 0) {
+        return 0;
+      }
+      return even(n - 1);
+    }
+
+    int main() {
+      printf("%d", even(1000000));
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src text
+    $ gcc main.c && ./a.out
+    #+end_src
+    
+    #+ATTR_REVEAL: :frag t
+    #+begin_src text
+    [1]    79338 segmentation fault  ./a.out
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src text
+    $ gcc -O2 main.c && ./a.out
+    #+end_src
+    
+    #+ATTR_REVEAL: :frag t
+    #+begin_src text
+    1
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src text
+    $ gcc -S -O2 main.c -o main_tco.s
+    $ gcc -S main.c -o main_no_tco.s
+    #+end_src
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+ATTR_ORG: :width 800
+    [[./imgs/Xnip2020-06-03_13-55-16.png]]
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src c
+    int even(int n) {
+      if (n == 0) {
+        return 1;
+      }
+     LBB0_2:
+      if (n == 1) {
+        return 0;
+      }
+      n-=2;
+      if (n != 0) {
+        goto LBB0_2;
+      }
+      return 1;
+    }
+    #+end_src
+
+*** Java does not provide Tail-Call Optimization (TCO)
+
+    #+begin_src java
+    package org.xusheng.ioliw.tco;
+
+    public class NoTCO {
+        private static boolean even(int n) {
+            if (n == 0) {
+                return true;
+            }
+            return odd(n - 1);
+        }
+
+        private static boolean odd(int n) {
+            if (n == 0) {
+                return false;
+            }
+            return even(n - 1);
+        }
+
+        public static void main(String[] args) {
+            System.out.println(even(100000));
+        }
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src text
+    Exception in thread "main" java.lang.StackOverflowError
+      at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
+      at org.xusheng.ioliw.tco.NoTCO.even(NoTCO.java:8)
+      at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
+      at org.xusheng.ioliw.tco.NoTCO.even(NoTCO.java:8)
+      at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
+    ...
+    #+end_src
+
+    
+*** Trampolines
+
+    [[./imgs/trampoline.png]]
+
+    #+REVEAL: split
+
+    #+begin_src java
+    package org.xusheng.ioliw.tco;
+
+    import java.util.stream.Stream;
+
+    public interface Trampoline<T> {
+        T get();
+
+        default Trampoline<T> jump() {
+            return this;
+        }
+
+        default T result() {
+            return get();
+        }
+
+        default boolean complete() {
+            return true;
+        }
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    static <T> Trampoline<T> done(final T result) {
+        return () -> result;
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    static <T> Trampoline<T> more(final Trampoline<Trampoline<T>> trampoline) {
+        return new Trampoline<T>() {
+            @Override
+            public boolean complete() {
+                return false;
+            }
+
+            @Override
+            public Trampoline<T> jump() {
+                return trampoline.result();
+            }
+
+            @Override
+            public T get() {
+                return trampoline(this);
+            }
+
+            T trampoline(final Trampoline<T> trampoline) {
+                return Stream.iterate(trampoline, Trampoline::jump)
+                    .filter(Trampoline::complete)
+                    .findFirst()
+                    .map(Trampoline::result)
+                    .orElse(null);
+            }
+        };
+    }
+    #+end_src
+
+    #+REVEAL: split
+    
+    #+begin_src java
+    package org.xusheng.ioliw.tco;
+
+    import static org.xusheng.ioliw.tco.Trampoline.done;
+    import static org.xusheng.ioliw.tco.Trampoline.more;
+
+    public class UseTrampoline {
+        public static Trampoline<Boolean> evenRec(int n) {
+            if (n == 0) {
+                return done(true);
+            }
+            return more(() -> oddRec(n - 1));
+        }
+
+        public static Trampoline<Boolean> oddRec(int n) {
+            if (n == 0) {
+                return done(false);
+            }
+            return more(() -> evenRec(n - 1));
+        }
+
+        public static void main(String[] args) {
+            System.out.println(evenRec(100000).get());
+        }
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src java
+    public static long fibonacciNaive(long n) {
+        if (n == 0) {
+            return 0;
+        }
+        if (n == 1) {
+            return 1;
+        }
+        return fibonacciNaive(n - 1) + fibonacciNaive(n - 2);
+    }
+
+    public static Trampoline<Long> fibonacci(long step, long a, long b) {
+        if (step == 0) {
+            return done(a);
+        }
+        return more(() -> fibonacci(step - 1, b, a + b));
+    }
+
+    public static void main(String[] args) {
+        System.out.println(fibonacci(45, 0, 1).get());
+        System.out.println(fibonacciNaive(45));
+    }
+    #+end_src
+
+    #+REVEAL: split
+    
+    #+ATTR_ORG: :width 400
+    [[./imgs/trampoline-class.png]]
+     
+* Haskell函数式编程语言
+
+  #+ATTR_HTML: :style background-color: white;
+  [[./imgs/haskell-logo.svg]]
+
+  #+begin_quote
+  An advanced, purely functional programming language
+  #+end_quote
+
+** 关于 ~Haskell~ 的段子
+   
+*** how to learn Haskell
+
+    #+ATTR_ORG: :width 400
+    [[./imgs/howtolearnhaskell.png]]
+
+*** learning curves for different programming languages
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+ATTR_ORG: :width 400
+    [[./imgs/java.png]]
+
+    #+ATTR_REVEAL: :frag t
+    #+ATTR_ORG: :width 400
+    [[./imgs/haskell.png]]
+
+    #+REVEAL: split
+
+    #+ATTR_ORG: :width 400
+    #+ATTR_HTML: :style width: 70%;
+    [[./imgs/learningcurve.jpg]]
+
+*** code written in Haskell is guaranteed to have no side effects
+
+    #+ATTR_ORG: :width 400
+    #+ATTR_HTML: :style width: 30%;
+    [[./imgs/haskell_2x.png]]
+
+*** 我大概看了这本书十年
+    ~Real World Hashell~
+    #+ATTR_ORG: :width 400
+    [[./imgs/realworldhaskell.jpg]]
+
+** pure function
+   
+   在程序设计中，若一个函数符合以下要求，则它可能被认为是纯函数：
+
+   1. 此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出无关。
+   2. 该函数不能有语义上可观察的函数副作用，诸如“触发事件”，使输出设备输出，或更改输出值以外物件的内容等。
+
+   #+REVEAL: split
+
+   #+begin_src haskell
+   double :: Int -> Int
+   double i = i + i
+
+   square :: Int -> Int
+   square i = i * i
+
+   factorial :: Integer -> Integer
+   factorial n = product [1..n]
+   #+end_src
+
+** immutable data
+
+   #+begin_src haskell
+   data Person = Person { firstName :: String
+                        , lastName :: String
+                        } deriving (Show)
+
+   p1 = Person { firstName = "Shane", lastName = "Xu" }
+
+   p2 = p1 { firstName = "Sheng" }
+
+   data User = User Int String
+   #+end_src
+
+** first-class function
+
+   #+begin_src haskell
+   add :: Int -> Int -> Int
+   add a b = a + b
+
+   adder1 :: Int -> Int
+   adder1 x = x + 1
+
+   adder1' = add 1
+
+   multiply :: Int -> Int -> Int
+   multiply a b = a * b
+
+   multiplier2 = multiply 2
+
+   add1ThenMultiply2 = multiplier2 . adder1
+
+   map plus1ThenMultiply2 [1, 2, 3]
+
+   map (\i -> ( i + 1) * 2) [1, 2, 3]
+   #+end_src
+
+** lazy
+   
+   #+begin_src haskell
+   fib = 0 : 1 : [ a+b | (a,b) <- zip fib (tail fib) ]
+
+   take 11 fib
+
+   fib !! 11
+   #+end_src
+
+** handle side effect
+
+   #+begin_src haskell
+   hello :: String -> IO ()
+   hello who = putStrLn ("Hello, " ++ who ++ "!")
+
+   main :: IO ()
+   main = hello "World"
+   #+end_src
+
+** Functor(函子), Applicative Functor(应用函子), Monad(单子)
+   
+*** Functor
+
+    #+begin_src haskell
+    class Functor f where
+        fmap :: (a -> b) -> f a -> f b
+    #+end_src
+
+*** Applicative
+
+    #+begin_src haskell
+    class (Functor f) => Applicative f where
+        pure  :: a -> f a
+        (<*>) :: f (a -> b) -> f a -> f b'
+    #+end_src
+
+*** Monad
+
+    #+begin_src haskell
+    class Monad m where
+        (>>=)  :: m a -> (a -> m b) -> m b
+        (>>)   :: m a ->  m b       -> m b
+        return ::   a               -> m a
+        fail   :: String -> m a
+    #+end_src

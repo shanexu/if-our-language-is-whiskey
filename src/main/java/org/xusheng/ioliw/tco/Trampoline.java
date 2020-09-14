@@ -2,75 +2,48 @@ package org.xusheng.ioliw.tco;
 
 import java.util.stream.Stream;
 
-import static org.xusheng.ioliw.tco.TailCalls.call;
-import static org.xusheng.ioliw.tco.TailCalls.done;
+public interface Trampoline<T> {
+    T get();
 
-public class Trampoline {
-    private static TailCall<Boolean> evenRec(final int number) {
-        if (number == 0) {
-            return done(true);
-        }
-        return call(() -> oddRec(number - 1));
-    }
-
-    private static TailCall<Boolean> oddRec(final int number) {
-        if (number == 0) {
-            return done(false);
-        }
-        return call(() -> evenRec(number - 1));
-    }
-
-    private static boolean even(final int number) {
-        return evenRec(number).invoke();
-    }
-
-    public static void main(String[] args) {
-        System.out.println(even(100000));
-    }
-}
-
-@FunctionalInterface
-interface TailCall<T> {
-
-    TailCall<T> apply();
-
-    default boolean isComplete() {
-        return false;
+    default Trampoline<T> jump() {
+        return this;
     }
 
     default T result() {
-        throw new Error("not implemented");
+        return get();
     }
 
-    default T invoke() {
-        return Stream.iterate(this, TailCall::apply)
-            .filter(TailCall::isComplete)
-            .findFirst()
-            .get()
-            .result();
-    }
-}
-
-class TailCalls {
-    public static <T> TailCall<T> call(final TailCall<T> nextCall) {
-        return nextCall;
+    default boolean complete() {
+        return true;
     }
 
-    public static <T> TailCall<T> done(final T value) {
-        return new TailCall<T>() {
+    static <T> Trampoline<T> done(final T result) {
+        return () -> result;
+    }
+
+    static <T> Trampoline<T> more(final Trampoline<Trampoline<T>> trampoline) {
+        return new Trampoline<T>() {
             @Override
-            public boolean isComplete() {
-                return true;
+            public boolean complete() {
+                return false;
             }
 
             @Override
-            public T result() {
-                return value;
+            public Trampoline<T> jump() {
+                return trampoline.result();
             }
 
             @Override
-            public TailCall<T> apply() {
-                throw new Error("not implemented");
+            public T get() {
+                return trampoline(this);
+            }
+
+            T trampoline(final Trampoline<T> trampoline) {
+                return Stream.iterate(trampoline, Trampoline::jump)
+                    .filter(Trampoline::complete)
+                    .findFirst()
+                    .map(Trampoline::result)
+                    .orElse(null);
             }
         };
     }

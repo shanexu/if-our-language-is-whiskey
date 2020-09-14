@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-13 Sun 18:01</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-14 Mon 08:01</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -27,6 +27,7 @@
 <ul>
 <li><a href="#/slide-1">1. 前言</a></li>
 <li><a href="#/slide-2">2. Java函数式编程</a></li>
+<li><a href="#/slide-3">3. Haskell函数式编程语言</a></li>
 </ul>
 </div>
 </div>
@@ -73,7 +74,7 @@
 <h3 id="1-2"><span class="section-number-3">1.2</span> Lambda</h3>
 
 <div class="figure">
-<p><img src="./imgs/lambda_rainbow.png" alt="lambda_rainbow.png" style="width: 75%;" />
+<p><img src="./imgs/lambda_rainbow.png" alt="lambda_rainbow.png" style="width: 70%;" />
 </p>
 </div>
 
@@ -582,6 +583,448 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 <div class="org-src-container">
 
 <pre class="fragment"><code class=" java" >jedisPoolWrapper.run(jedis -&gt; jedis.get("hello.world"));
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-4">
+<h3 id="2-4"><span class="section-number-3">2.4</span> optimizing recursions</h3>
+<div class="outline-text-3" id="text-2-4">
+</div>
+</section>
+<section id="slide-2-4-1">
+<h4 id="2-4-1"><span class="section-number-4">2.4.1</span> Tail-Call Optimization (TCO)</h4>
+<div class="org-src-container">
+
+<pre><code class=" c" >#include &lt;stdio.h&gt;
+
+int even(int n);
+int odd(int n);
+
+int even(int n) {
+  if (n == 0) {
+    return 1;
+  }
+  return odd(n - 1);
+}
+
+int odd(int n) {
+  if (n == 0) {
+    return 0;
+  }
+  return even(n - 1);
+}
+
+int main() {
+  printf("%d", even(1000000));
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" text" >$ gcc main.c &amp;&amp; ./a.out
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" text" >[1]    79338 segmentation fault  ./a.out
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" text" >$ gcc -O2 main.c &amp;&amp; ./a.out
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" text" >1
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" text" >$ gcc -S -O2 main.c -o main_tco.s
+$ gcc -S main.c -o main_no_tco.s
+</code></pre>
+</div>
+
+
+<div class="figure">
+<p><img src="./imgs/Xnip2020-06-03_13-55-16.png" alt="Xnip2020-06-03_13-55-16.png" class="fragment fade-in-then-out" />
+</p>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" c" >int even(int n) {
+  if (n == 0) {
+    return 1;
+  }
+ LBB0_2:
+  if (n == 1) {
+    return 0;
+  }
+  n-=2;
+  if (n != 0) {
+    goto LBB0_2;
+  }
+  return 1;
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-2-4-2">
+<h4 id="2-4-2"><span class="section-number-4">2.4.2</span> Java does not provide Tail-Call Optimization (TCO)</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >package org.xusheng.ioliw.tco;
+
+public class NoTCO {
+    private static boolean even(int n) {
+        if (n == 0) {
+            return true;
+        }
+        return odd(n - 1);
+    }
+
+    private static boolean odd(int n) {
+        if (n == 0) {
+            return false;
+        }
+        return even(n - 1);
+    }
+
+    public static void main(String[] args) {
+        System.out.println(even(100000));
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" text" >Exception in thread "main" java.lang.StackOverflowError
+  at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
+  at org.xusheng.ioliw.tco.NoTCO.even(NoTCO.java:8)
+  at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
+  at org.xusheng.ioliw.tco.NoTCO.even(NoTCO.java:8)
+  at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
+...
+</code></pre>
+</div>
+
+
+</section>
+<section id="slide-2-4-3">
+<h4 id="2-4-3"><span class="section-number-4">2.4.3</span> Trampolines</h4>
+
+<div class="figure">
+<p><img src="./imgs/trampoline.png" alt="trampoline.png" />
+</p>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >package org.xusheng.ioliw.tco;
+
+import java.util.stream.Stream;
+
+public interface Trampoline&lt;T&gt; {
+    T get();
+
+    default Trampoline&lt;T&gt; jump() {
+        return this;
+    }
+
+    default T result() {
+        return get();
+    }
+
+    default boolean complete() {
+        return true;
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >static &lt;T&gt; Trampoline&lt;T&gt; done(final T result) {
+    return () -&gt; result;
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >static &lt;T&gt; Trampoline&lt;T&gt; more(final Trampoline&lt;Trampoline&lt;T&gt;&gt; trampoline) {
+    return new Trampoline&lt;T&gt;() {
+        @Override
+        public boolean complete() {
+            return false;
+        }
+
+        @Override
+        public Trampoline&lt;T&gt; jump() {
+            return trampoline.result();
+        }
+
+        @Override
+        public T get() {
+            return trampoline(this);
+        }
+
+        T trampoline(final Trampoline&lt;T&gt; trampoline) {
+            return Stream.iterate(trampoline, Trampoline::jump)
+                .filter(Trampoline::complete)
+                .findFirst()
+                .map(Trampoline::result)
+                .orElse(null);
+        }
+    };
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >package org.xusheng.ioliw.tco;
+
+import static org.xusheng.ioliw.tco.Trampoline.done;
+import static org.xusheng.ioliw.tco.Trampoline.more;
+
+public class UseTrampoline {
+    public static Trampoline&lt;Boolean&gt; evenRec(int n) {
+        if (n == 0) {
+            return done(true);
+        }
+        return more(() -&gt; oddRec(n - 1));
+    }
+
+    public static Trampoline&lt;Boolean&gt; oddRec(int n) {
+        if (n == 0) {
+            return done(false);
+        }
+        return more(() -&gt; evenRec(n - 1));
+    }
+
+    public static void main(String[] args) {
+        System.out.println(evenRec(100000).get());
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >public static long fibonacciNaive(long n) {
+    if (n == 0) {
+        return 0;
+    }
+    if (n == 1) {
+        return 1;
+    }
+    return fibonacciNaive(n - 1) + fibonacciNaive(n - 2);
+}
+
+public static Trampoline&lt;Long&gt; fibonacci(long step, long a, long b) {
+    if (step == 0) {
+        return done(a);
+    }
+    return more(() -&gt; fibonacci(step - 1, b, a + b));
+}
+
+public static void main(String[] args) {
+    System.out.println(fibonacci(45, 0, 1).get());
+    System.out.println(fibonacciNaive(45));
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+
+<div class="figure">
+<p><img src="./imgs/trampoline-class.png" alt="trampoline-class.png" />
+</p>
+</div>
+
+</section>
+</section>
+<section>
+<section id="slide-3">
+<h2 id="3"><span class="section-number-2">3</span> Haskell函数式编程语言</h2>
+
+<div class="figure">
+<p><object type="image/svg+xml" data="./imgs/haskell-logo.svg" class="org-svg" style="background-color: white;">
+Sorry, your browser does not support SVG.</object>
+</p>
+</div>
+
+<blockquote>
+<p>
+An advanced, purely functional programming language
+</p>
+</blockquote>
+
+</section>
+<section id="slide-3-1">
+<h3 id="3-1"><span class="section-number-3">3.1</span> 关于 <code>Haskell</code> 的段子</h3>
+<div class="outline-text-3" id="text-3-1">
+</div>
+</section>
+<section id="slide-3-1-1">
+<h4 id="3-1-1"><span class="section-number-4">3.1.1</span> how to learn Haskell</h4>
+
+<div class="figure">
+<p><img src="./imgs/howtolearnhaskell.png" alt="howtolearnhaskell.png" />
+</p>
+</div>
+
+</section>
+<section id="slide-3-1-2">
+<h4 id="3-1-2"><span class="section-number-4">3.1.2</span> learning curves for different programming languages</h4>
+
+<div class="figure">
+<p><img src="./imgs/java.png" alt="java.png" class="fragment fade-in-then-out" />
+</p>
+</div>
+
+
+<div class="figure">
+<p><img src="./imgs/haskell.png" alt="haskell.png" class="fragment" />
+</p>
+</div>
+
+</section>
+<section>
+
+
+<div class="figure">
+<p><img src="./imgs/learningcurve.jpg" alt="learningcurve.jpg" style="width: 70%;" />
+</p>
+</div>
+
+</section>
+<section id="slide-3-1-3">
+<h4 id="3-1-3"><span class="section-number-4">3.1.3</span> code written in Haskell is guaranteed to have no side effects</h4>
+
+<div class="figure">
+<p><img src="./imgs/haskell_2x.png" alt="haskell_2x.png" style="width: 30%;" />
+</p>
+</div>
+
+</section>
+<section id="slide-3-1-4">
+<h4 id="3-1-4"><span class="section-number-4">3.1.4</span> 我大概看了这本书十年</h4>
+<p>
+<code>Real World Hashell</code>
+</p>
+
+<div class="figure">
+<p><img src="./imgs/realworldhaskell.jpg" alt="realworldhaskell.jpg" />
+</p>
+</div>
+
+</section>
+<section id="slide-3-2">
+<h3 id="3-2"><span class="section-number-3">3.2</span> pure function</h3>
+<p>
+在程序设计中，若一个函数符合以下要求，则它可能被认为是纯函数：
+</p>
+
+<ol>
+<li>此函数在相同的输入值时，需产生相同的输出。函数的输出和输入值以外的其他隐藏信息或状态无关，也和由I/O设备产生的外部输出无关。</li>
+<li>该函数不能有语义上可观察的函数副作用，诸如“触发事件”，使输出设备输出，或更改输出值以外物件的内容等。</li>
+
+</ol>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >double :: Int -&gt; Int
+double i = i + i
+
+square :: Int -&gt; Int
+square i = i * i
+
+factorial :: Integer -&gt; Integer
+factorial n = product [1..n]
+</code></pre>
+</div>
+
+</section>
+<section id="slide-3-3">
+<h3 id="3-3"><span class="section-number-3">3.3</span> immutable data</h3>
+<div class="org-src-container">
+
+<pre><code class=" haskell" >data Person = Person { firstName :: String
+                     , lastName :: String
+                     } deriving (Show)
+
+p1 = Person { firstName = "Shane", lastName = "Xu" }
+
+p2 = p1 { firstName = "Sheng" }
+
+data User = User Int String
+</code></pre>
+</div>
+
+</section>
+<section id="slide-3-4">
+<h3 id="3-4"><span class="section-number-3">3.4</span> first-class function</h3>
+<div class="org-src-container">
+
+<pre><code class=" haskell" >add :: Int -&gt; Int -&gt; Int
+add a b = a + b
+
+adder1 :: Int -&gt; Int
+adder1 x = x + 1
+
+adder1' = add 1
+
+multiply :: Int -&gt; Int -&gt; Int
+multiply a b = a * b
+
+multiplier2 = multiply 2
+
+add1ThenMultiply2 = multiplier2 . adder1
+
+map plus1ThenMultiply2 [1, 2, 3]
+
+map (\i -&gt; ( i + 1) * 2) [1, 2, 3]
 </code></pre>
 </div>
 </section>
