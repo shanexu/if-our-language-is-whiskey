@@ -672,7 +672,7 @@ such as sequential or parallel map-reduce transformations.
    
    [[https://github.com/shanexu/FunWithHaxl]]
 
-   #+begin_src shell
+   #+begin_src shell-script
    stack setup
    stack run
    #+end_src

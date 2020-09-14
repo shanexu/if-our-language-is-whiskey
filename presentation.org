@@ -828,3 +828,217 @@
         return ::   a               -> m a
         fail   :: String -> m a
     #+end_src
+
+    #+REVEAL: split
+
+    Optional
+    #+begin_src haskell
+    data Optional t
+      = Some t
+      | None deriving (Eq, Ord, Show)
+    #+end_src
+       
+    #+begin_src haskell
+    instance Functor Optional where
+      fmap _ None = None
+      fmap f (Some x)  = Some (f x)
+    #+end_src
+
+    #+begin_src haskell
+    instance Applicative Optional where
+      pure = Some
+      None <*> a = None
+      Some f <*> a = fmap f a
+    #+end_src
+
+    #+begin_src haskell
+    instance Monad Optional where
+      None >>= f = None
+      Some x >>= f = f x
+    #+end_src
+         
+    #+REVEAL: split
+
+    Maybe is a Monad
+
+    #+begin_src haskell
+    Just 1
+      >> return 2
+      >>= \t -> return (t+1)
+    #+end_src
+
+    #+REVEAL: split
+
+    ~>>=~ (bind function)
+
+    Haskell的 ~Maybe~ 就是Java的 ~Optional~ 。
+    ~>>=~ 操作符或者叫 ~bind~ 函数，其实就是 ~flatMap~ 。
+
+    #+REVEAL: split
+
+    让我们解决羊的问题，
+
+    #+begin_src haskell
+    data Sheep = Sheep Int Name
+
+    fatherMaybe :: Sheep -> Maybe Sheep
+    fatherMaybe s = undefined
+
+    motherMaybe :: Sheep -> Maybe Sheep
+    motherMaybe = undefined
+    #+end_src
+
+    #+REVEAL: split
+
+    定义函数 =mothersFathersMothersFathersMotherMaybe= 找羊的妈的爸的妈的爸的妈
+    #+begin_src haskell
+    mothersFathersMothersFathersMotherMaybe :: Sheep -> Maybe Sheep
+    mothersFathersMothersFathersMotherMaybe s =
+      motherMaybe s >>=
+      fatherMaybe >>=
+      motherMaybe >>=
+      fatherMaybe >>=
+      motherMaybe
+    #+end_src
+
+    #+REVEAL: split
+
+    IO is a Monad
+
+    #+begin_src haskell
+    putStrLn "Who are you?"
+      >> getLine
+      >>= \name -> putStrLn ("Hello, " ++ name ++ "!")
+    #+end_src
+
+    #+begin_src text
+    Prelude> :{
+    Prelude| :type putStrLn "Who are you?"
+    Prelude|   >> getLine
+    Prelude|   >>= \name -> putStrLn ("Hello, " ++ name ++ "!")
+    Prelude| :}
+    putStrLn "Who are you?"
+      >> getLine
+      >>= \name -> putStrLn ("Hello, " ++ name ++ "!")
+      :: IO ()
+    Prelude>
+    #+end_src
+
+    #+begin_src haskell
+    do
+      name <- getLine
+      putStrLn ("Hello, " ++ name + "!")
+    #+end_src
+
+    #+REVEAL: split
+
+    Why Monad?
+
+    1. Modularity
+    2. Flexibility
+    3. Isolation
+       
+* Haxl
+
+  [[./imgs/haxl-logo.png]]
+
+  Haxl是一个基于Monad的优雅的数据加载框架。
+
+  #+ATTR_REVEAL: :frag (appear)
+  1. batch multiple requests to the same data source,
+  2. request data from multiple data sources concurrently,
+  3. cache previous requests,
+  4. memoize computations.
+
+** fun with haxl
+   
+   [[https://github.com/shanexu/FunWithHaxl]]
+
+   #+begin_src text
+   $ stack setup
+   $ stack run
+   #+end_src
+
+   #+REVEAL: split
+
+   #+begin_src haskell
+   {-# LANGUAGE OverloadedStrings #-}
+
+   module Main where
+
+   import System.Environment
+   import qualified HaxlBlog as H
+   import qualified BlogDB as R
+
+   defaultDB = "blog.sqlite"
+
+   main :: IO ()
+   main = do
+     putStrLn "raw:"
+     R.run (R.getPostIds >>= mapM R.getPostContent) >>= print
+     putStrLn "haxl:"
+     H.run (H.getPostIds >>= mapM H.getPostContent) >>= print
+   #+end_src
+
+   #+REVEAL: split
+   
+   #+begin_src text
+   raw:
+   select postid from postinfo;
+   select content from postcontent where postid = 1;
+   select content from postcontent where postid = 2;
+   select content from postcontent where postid = 3;
+   select content from postcontent where postid = 4;
+   select content from postcontent where postid = 5;
+   select content from postcontent where postid = 6;
+   select content from postcontent where postid = 7;
+   select content from postcontent where postid = 8;
+   select content from postcontent where postid = 9;
+   select content from postcontent where postid = 10;
+   select content from postcontent where postid = 11;
+   select content from postcontent where postid = 12;
+   ["example content 1","example content 2","example content 3","example content 4","example content 5","example content 6","example content 7","example content 8","example content 9","example content 10","example content 11","example content 12"]
+   haxl:
+   select postid from postinfo;
+   select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2,1);
+   ["example content 1","example content 2","example content 3","example content 4","example content 5","example content 6","example content 7","example content 8","example content 9","example content 10","example content 11","example content 12"]
+   #+end_src
+
+** make a plain
+
+   假设几个数据之间依赖关系如下：
+   #+begin_src dot :exports results :file ./imgs/deps.png :cmdline -Kdot -Tpng :hidden
+   digraph G {
+     "A" -> "B"
+     "A" -> "C"
+     "B" -> "D"
+     "B" -> "E"
+     "C" -> "F"
+     "C" -> "E"
+   }
+   #+end_src
+
+   #+RESULTS:
+   [[file:./imgs/deps.png]]
+   
+   #+REVEAL: split
+
+   一种资源获取/计算的执行计划可以如下：
+   #+begin_src dot :exports results :file ./imgs/schedule.png :cmdline -Kdot -Tpng :hidden
+   digraph G {
+     rankdir="LR";
+     node [shape=box];
+     "D, E, F" -> "B, C" -> "A"
+   }
+   #+end_src
+
+   #+RESULTS:
+   [[file:./imgs/schedule.png]]
+
+** scala fetch
+
+   #+ATTR_HTML: :style background-color: white;
+   [[./imgs/fetch-logo.svg]]
+
+   [[https://github.com/47degrees/fetch]]
+

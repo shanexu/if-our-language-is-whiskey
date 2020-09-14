@@ -63,3 +63,15 @@
   position: absolute;
   width: 100%;
 }
+
+#slide-3-4 div.org-src-container pre {
+  height: 500px;
+}
+
+#slide-4-1 + section pre {
+  height: 450px;
+}
+
+#slide-4-1 + section + section pre {
+  height: 550px;
+}
