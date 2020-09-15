@@ -877,7 +877,6 @@ such as sequential or parallel map-reduce transformations.
              return new IO<>(() -> f.apply(ma.value.get()).value.get());
          }
      }
-
      #+end_src
 
 **** 写几个util

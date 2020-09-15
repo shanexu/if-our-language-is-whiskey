@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-14 Mon 13:53</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-15 Tue 12:29</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -142,7 +142,7 @@ Collections
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >void forEach(Consumer&lt;? super T&gt; action);
+<pre class="fragment"><code class=" java" >void forEach(Consumer&lt;? super T&gt; action);
 </code></pre>
 </div>
 
@@ -1486,6 +1486,549 @@ object sample {
 </div>
 
 </section>
+<section id="slide-4-4">
+<h3 id="4-4"><span class="section-number-3">4.4</span> IO Monad in Java</h3>
+<div class="outline-text-3" id="text-4-4">
+</div>
+</section>
+<section id="slide-4-4-1">
+<h4 id="4-4-1"><span class="section-number-4">4.4.1</span> 一个简单的实现</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public class IO&lt;T&gt; {
+    private final Supplier&lt;T&gt; value;
+
+    private IO(Supplier&lt;T&gt; value) {
+        this.value = value;
+    }
+
+    public static &lt;T&gt; IO&lt;T&gt; of(Supplier&lt;T&gt; value) {
+        return new IO&lt;&gt;(value);
+    }
+
+    public static &lt;T&gt; IO&lt;T&gt; ret(T t) {
+        return new IO&lt;&gt;(() -&gt; t);
+    }
+
+    public static &lt;A, B&gt; IO&lt;B&gt; bind(IO&lt;A&gt; ma, Function&lt;A, IO&lt;B&gt;&gt; f) {
+        return new IO&lt;&gt;(() -&gt; f.apply(ma.value.get()).value.get());
+    }
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-4-2">
+<h4 id="4-4-2"><span class="section-number-4">4.4.2</span> 写几个util</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static IO&lt;Void&gt; printf(PrintStream s, String format, Object... args) {
+    return IO.of(() -&gt; {
+            s.printf(format, args);
+            return null;
+        });
+}
+
+public static IO&lt;Void&gt; printf(String format, Object... args) {
+    return printf(System.out, format, args);
+}
+
+public static IO&lt;String&gt; readLine(InputStream s) {
+    return IO.of(() -&gt; new Scanner(s).nextLine());
+}
+
+public static IO&lt;String&gt; readLine() {
+    return readLine(System.in);
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-4-3">
+<h4 id="4-4-3"><span class="section-number-4">4.4.3</span> 使用实例</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static void main(String[] args) {
+    printf("What's your name? ")
+        .bind(readLine()).bind(name -&gt; printf("Hello, %s\n", name))
+        .bind(printf("How old are you? "))
+        .bind(readInt())
+        .bind(age -&gt; printf("You are %d years old.\n", age))
+        .runIO();
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-4-4">
+<h4 id="4-4-4"><span class="section-number-4">4.4.4</span> 但是&#x2026;&#x2026;</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >IO&lt;Void&gt; m = printf("function composition\n")
+    .bind(printf("begin\n"));
+for (int i = 0; i &lt; 10000; i++) {
+    m = m.bind(IO.ret(1)).bind(IO.ret(null));
+}
+m = m.bind(printf("end\n"));
+m.runIO();
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" text" >Exception in thread "main" java.lang.StackOverflowError
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+  at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+...
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-4-5">
+<h4 id="4-4-5"><span class="section-number-4">4.4.5</span> 还记得 <code>trampoline</code> 吗？</h4>
+<p>
+定义trampoline interface
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >public interface Trampoline&lt;A&gt; {
+
+    Trampoline&lt;A&gt; resume();
+
+    default A runT() {
+        Trampoline&lt;A&gt; t = this;
+        while (!(t instanceof Done)) {
+            t = t.resume();
+        }
+        return ((Done&lt;A&gt;) t).result;
+    }
+
+    default &lt;B&gt; Trampoline&lt;B&gt; flatMap(Function&lt;A, Trampoline&lt;B&gt;&gt; f) {
+        return new FlatMap&lt;&gt;(this, f);
+    }
+
+    default &lt;B&gt; Trampoline&lt;B&gt; map(Function&lt;A, B&gt; f) {
+        return new FlatMap&lt;&gt;(this, a -&gt; done(f.apply(a)));
+    }
+
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<p>
+Done
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >@AllArgsConstructor
+class Done&lt;A&gt; implements Trampoline&lt;A&gt; {
+    private final A result;
+
+    @Override
+    public Trampoline&lt;A&gt; resume() {
+        return this;
+    }
+}
+
+static &lt;T&gt; Trampoline&lt;T&gt; done(T t) {
+    return new Done&lt;&gt;(t);
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<p>
+More
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >@AllArgsConstructor
+class More&lt;A&gt; implements Trampoline&lt;A&gt; {
+    private final Supplier&lt;Trampoline&lt;A&gt;&gt; k;
+
+    @Override
+    public Trampoline&lt;A&gt; resume() {
+        return k.get();
+    }
+}
+
+static &lt;T&gt; Trampoline&lt;T&gt; more(Supplier&lt;Trampoline&lt;T&gt;&gt; k) {
+    return new More&lt;&gt;(k);
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<p>
+FlatMap
+</p>
+
+<div class="org-src-container">
+
+<pre class="fragment fade-out"><code class=" scala" >final def resume: Either [() =&gt; Trampoline[A], A] =
+  this match {
+    case Done(v) =&gt; Right(v)
+    case More(k) =&gt; Left(k)
+    case FlatMap(a, f) =&gt; a match {
+      case Done(v) =&gt; f(v).resume
+      case More(k) =&gt; Left(() =&gt;
+        FlatMap(k(), f))
+      case FlatMap(b, g) =&gt;
+        (FlatMap(b, (x: Any) =&gt; FlatMap(g(x), f) ): Trampoline[A]).resume
+    }
+  }
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment fade-in-then-out"><code class=" java" >@AllArgsConstructor
+class FlatMap&lt;B, A&gt; implements Trampoline&lt;A&gt; {
+    private final Trampoline&lt;B&gt; sub;
+    private final Function&lt;B, Trampoline&lt;A&gt;&gt; k;
+    @Override
+    public Trampoline&lt;A&gt; resume() {
+        if (sub instanceof Done) {
+            return k.apply(((Done&lt;B&gt;) sub).result);
+        }
+        if (sub instanceof More) {
+            return new FlatMap&lt;&gt;(((More&lt;B&gt;) sub).k.get(), k);
+        }
+        if (sub instanceof FlatMap) {
+            FlatMap&lt;Object, B&gt; s = (FlatMap&lt;Object, B&gt;) sub;
+            Trampoline&lt;Object&gt; b = s.sub;
+            Function&lt;Object, Trampoline&lt;B&gt;&gt; g = s.k;
+            return new FlatMap&lt;&gt;(b, x -&gt; new FlatMap&lt;&gt;(g.apply(x), k));
+        }
+        throw new RuntimeException("unhandled sub type " +
+                                   this.sub.getClass());
+    }
+}
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" java" >static &lt;B, A&gt; Trampoline&lt;A&gt; flatMap(Trampoline&lt;B&gt; sub,
+                                    Function&lt;B, Trampoline&lt;A&gt;&gt; k) {
+    return new FlatMap&lt;&gt;(sub, k);
+}
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<p>
+实例
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" java" >public static void main(String[] args) {
+    more(() -&gt; {
+            System.out.print("What's your name? ");
+            return done(null);
+        })
+        .flatMap(v -&gt; done(new Scanner(System.in).nextLine()))
+        .flatMap(name -&gt; {
+                System.out.printf("Hello, %s!\n", name);
+                return done(null);
+            })
+        .runT();
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-4-6">
+<h4 id="4-4-6"><span class="section-number-4">4.4.6</span> 使用Trampoline优化IO</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public class IO&lt;T&gt; {
+    private final Trampoline&lt;T&gt; value;
+
+    private IO(Trampoline&lt;T&gt; value) {
+        this.value = value;
+    }
+
+    private IO(Supplier&lt;T&gt; value) {
+        this(more(() -&gt; done(value.get())));
+    }
+
+    public static &lt;T&gt; IO&lt;T&gt; ret(T t) {
+        return pure(t);
+    }
+
+    public static &lt;T&gt; IO&lt;T&gt; pure(T t) {
+        return new IO&lt;&gt;(() -&gt; t);
+    }
+
+    public static &lt;A, B&gt; IO&lt;B&gt; fmap(Function&lt;A, B&gt; f, IO&lt;A&gt; fa) {
+        return new IO&lt;&gt;(fa.value.map(f));
+    }
+
+    public static &lt;A, B&gt; IO&lt;B&gt; bind(IO&lt;A&gt; ma, Function&lt;A, IO&lt;B&gt;&gt; func) {
+        return new IO&lt;&gt;(ma.value.flatMap(x -&gt; func.apply(x).value));
+    }
+    // ...
+}
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-4-7">
+<h4 id="4-4-7"><span class="section-number-4">4.4.7</span> 再试一次</h4>
+<div class="org-src-container">
+
+<pre><code class=" java" >public static void main(String[] args) {
+    IO&lt;Void&gt; m = printf("trampoline\n")
+        .bind(printf("begin\n"));
+    for (int i = 0; i &lt; 10000; i++) {
+        m = m.bind(IO.ret(0)).bind(IO.ret(null));
+    }
+    m = m.bind(printf("end\n"));
+    m.runIO();
+}
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" text" >trampoline
+begin
+end
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-5">
+<h3 id="4-5"><span class="section-number-3">4.5</span> Haxl in Java???</h3>
+<div class="outline-text-3" id="text-4-5">
+</div>
+</section>
+<section id="slide-4-5-1">
+<h4 id="4-5-1"><span class="section-number-4">4.5.1</span> Haxl的原理</h4>
+<p>
+Concurrency monads A
+</p>
+<div class="org-src-container">
+
+<pre><code class=" haskell" >data Fetch a = Done a | Blocked (Fetch a) An
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment fade-in-then-out"><code class=" haskell" >class Functor f where
+  fmap :: (a -&gt; b) -&gt; f a -&gt; f b
+
+class Functor f =&gt; Applicative f where
+  pure :: a -&gt; f a
+  (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b
+
+class Monad f where
+  return :: a -&gt; f a
+  (&gt;&gt;=) :: f a -&gt; (a -&gt; f b) -&gt; f b
+
+ap :: (Monad m) =&gt; m (a -&gt; b) -&gt; m a -&gt; m b
+ap mf mx = do
+  f &lt;- mf
+  x &lt;- mx
+  return (f x)
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" haskell" >instance Functor Fetch where
+  fmap f (Done x) = Done (f x)
+  fmap f (Blocked c) = Blocked (fmap f c)
+
+instance Monad Fetch where
+  return = Done
+
+  Done a &gt;&gt;= k = k a
+  Blocked c &gt;&gt;= k = Blocked (c &gt;&gt;= k)
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<p>
+Applicative concurrency
+</p>
+
+<div class="org-src-container">
+
+<pre class="fragment fade-in-then-out"><code class=" haskell" >instance Applicative Fetch where
+  pure = return
+
+  Done g &lt;*&gt; Done y = Done (g y)
+  Done g &lt;*&gt; Blocked c = Blocked (g &lt;$&gt; c) -- &lt;$&gt; = fmap
+  Blocked c &lt;*&gt; Done y = Blcoked (c &lt;*&gt; Done y)
+  Blocked c &lt;*&gt; Blocked d = Blocked (c &lt;*&gt; d)
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre class="fragment"><code class=" haskell" >instance Applicative Fetch where
+  pure = return
+
+  Done f &lt;*&gt; x = f &lt;$&gt; x
+  Blocked c &lt;*&gt; x = Blocked (c &lt;*&gt; x)
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<p>
+Fetching data
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >newIORef :: a -&gt; IO (IORef a)
+readIORef :: IORef a -&gt; IO a
+writeIORef :: IORef a -&gt; a -&gt; IO ()
+
+data BlockedRequest =
+  forall a . BlockedRequest (Request a) (IORef (FetchStatus a))
+
+data FetchStatus a
+  = NotFetched
+  | FetchSuccess a
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >data Result a
+  = Done a
+  | Blocked (Seq BlockedRequest) (Fetch a)
+
+newtype Fetch a = Fetch { unFetch :: IO (Result a) }
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >instance Applicative Fetch where
+  pure = return
+  Fetch f &lt;*&gt; Fetch x = Fetch $ do
+    f' &lt;- f
+    x' &lt;- x
+    case (f', x') of
+      (Done g, Done y ) -&gt; return (Done (g y))
+      (Done g, Blocked br c ) -&gt; return (Blocked br (g &lt;$&gt; c))
+      (Blocked br c, Done y ) -&gt; return (Blocked br (c &lt;*&gt; return y))
+      (Blocked br1 c, Blocked br2 d) -&gt; return (Blocked (br1 &lt;&gt; br2) (c &lt;*&gt; d))
+</code></pre>
+</div>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >instance Monad Fetch where
+  return a = Fetch $ return (Done a)
+
+  Fetch m &gt;&gt;= k = Fetch $ do
+    r &lt;- m
+    case r of
+      Done a -&gt; unFetch (k a)
+      Blocked br c -&gt; return (Blocked br (c &gt;&gt;= k))
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >dataFetch :: Request a -&gt; Fetch a
+dataFetch request = Fetch $ do
+  box ← newIORef NotFetched             -- (1)
+  let br = BlockedRequest request box   -- (2)
+  let cont = Fetch $ do                 -- (3)
+        FetchSuccess a &lt;- readIORef box -- (4)
+        return (Done a)                 -- (5)
+  return (Blocked (singleton br) cont)  -- (6)
+</code></pre>
+</div>
+
+<ul>
+<li class="fragment appear">Line 1 creates a new <code>IORef</code> to store the result, initially containing NotFetched.</li>
+<li class="fragment appear">Line 2 creates a <code>BlockedRequest</code> for this request.</li>
+<li class="fragment appear">Lines 3–5 define the continuation, which reads the result from the <code>IORef</code> and returns it in the monad. Note that the contents of the IORef is assumed to be <code>FetchSuccess a</code> when the continuation is executed. It is an internal error of the framework if this is not true, so we don't attempt to handle the error condition here.</li>
+<li class="fragment appear">Line 6: <code>dataFetch</code> returns <code>Blocked</code> in the monad, including the <code>BlockedRequest</code>.</li>
+
+</ul>
+
+</section>
+<section>
+
+<p>
+Running a computation
+</p>
+
+<div class="org-src-container">
+
+<pre><code class=" haskell" >fetch :: [BlockedRequest] -&gt; IO ()
+fetch = undefined
+
+runFetch :: Fetch a -&gt; IO a
+runFetch (Fetch h) = do
+  r &lt;- h
+  case r of
+    Done a -&gt; return a
+    Blocked br cont -&gt; do
+      fetch (toList br)
+      runFetch cont
+</code></pre>
+</div>
+
+</section>
+<section id="slide-4-5-2">
+<h4 id="4-5-2"><span class="section-number-4">4.5.2</span> Java实现</h4>
+<ol>
+<li class="fragment appear">Haxl的原理</li>
+<li class="fragment appear">基于Trampoline的IO Monad实现</li>
+<li class="fragment appear">可以实现IORef</li>
+<li class="fragment appear">Trampoline可以用于其他Monad的实现</li>
+
+</ol>
+
+</section>
+<section>
+
+<p>
+<a href="https://github.com/shanexu/if-our-language-is-whiskey/tree/master/src/main/java/org/xusheng/ioliw/haxl">https://github.com/shanexu/if-our-language-is-whiskey/tree/master/src/main/java/org/xusheng/ioliw/haxl</a>
+</p>
+
+</section>
 </section>
 <section>
 <section id="slide-5">
@@ -1505,7 +2048,6 @@ object sample {
 <a href="https://github.com/hmemcpy/milewski-ctfp-pdf">https://github.com/hmemcpy/milewski-ctfp-pdf</a></li>
 
 </ol>
-
 
 </section>
 </section>

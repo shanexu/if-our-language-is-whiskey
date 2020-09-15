@@ -75,3 +75,73 @@
 #slide-4-1 + section + section pre {
   height: 550px;
 }
+
+#slide-4-4-1 code {
+  max-height: unset;
+}
+
+#slide-4-4-2 code {
+  max-height: unset;
+}
+
+#slide-4-4-5 code {
+  max-height: unset;
+}
+
+#slide-4-4-5 + section + section + section p {
+  position: relative;
+}
+
+#slide-4-4-5 + section + section + section div {
+  position: absolute;
+  width: 100%;
+}
+
+#slide-4-4-5 + section + section + section code {
+  max-height: unset;
+}
+
+#slide-4-5-1 code {
+  max-height: unset;
+}
+
+#slide-4-5-1 div:nth-child(3) {
+  position: relative;
+}
+
+#slide-4-5-1 div:nth-child(4) {
+  position: absolute;
+  width: 100%;
+}
+
+#slide-4-5-1 div:nth-child(5) {
+  position: absolute;
+  width: 100%;
+}
+
+#slide-4-5-1 + section p {
+  position: relative;
+}
+
+#slide-4-5-1 + section div:nth-child(2) {
+  position: absolute;
+  width: 100%;
+
+}
+
+#slide-4-5-1 + section div:nth-child(3) {
+  position: absolute;
+  width: 100%;
+}
+
+#slide-4-5-1 + section + section + section code {
+  font-size: 0.96em;
+}
+
+#slide-4-5-1 + section + section + section + section ul {
+  font-size: 0.7em;
+}
+
+#slide-5 ol {
+  font-size: 0.75em;
+}

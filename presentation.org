@@ -73,7 +73,7 @@
     }
     #+end_src
 
-    #+ATTR_REVEAL: :frag frag-style
+    #+ATTR_REVEAL: :frag t
     #+begin_src java
     void forEach(Consumer<? super T> action);
     #+end_src
@@ -1143,6 +1143,457 @@
     <-- [19] One Node A
     #+end_src
 
+** IO Monad in Java
+
+*** 一个简单的实现
+    
+    #+begin_src java
+    public class IO<T> {
+        private final Supplier<T> value;
+
+        private IO(Supplier<T> value) {
+            this.value = value;
+        }
+
+        public static <T> IO<T> of(Supplier<T> value) {
+            return new IO<>(value);
+        }
+
+        public static <T> IO<T> ret(T t) {
+            return new IO<>(() -> t);
+        }
+
+        public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> f) {
+            return new IO<>(() -> f.apply(ma.value.get()).value.get());
+        }
+    }
+    #+end_src
+
+*** 写几个util
+    
+    #+begin_src java
+    public static IO<Void> printf(PrintStream s, String format, Object... args) {
+        return IO.of(() -> {
+                s.printf(format, args);
+                return null;
+            });
+    }
+
+    public static IO<Void> printf(String format, Object... args) {
+        return printf(System.out, format, args);
+    }
+
+    public static IO<String> readLine(InputStream s) {
+        return IO.of(() -> new Scanner(s).nextLine());
+    }
+
+    public static IO<String> readLine() {
+        return readLine(System.in);
+    }
+    #+end_src
+
+*** 使用实例
+
+    #+begin_src java
+    public static void main(String[] args) {
+        printf("What's your name? ")
+            .bind(readLine()).bind(name -> printf("Hello, %s\n", name))
+            .bind(printf("How old are you? "))
+            .bind(readInt())
+            .bind(age -> printf("You are %d years old.\n", age))
+            .runIO();
+    }
+    #+end_src
+
+*** 但是......
+
+    #+begin_src java
+    IO<Void> m = printf("function composition\n")
+        .bind(printf("begin\n"));
+    for (int i = 0; i < 10000; i++) {
+        m = m.bind(IO.ret(1)).bind(IO.ret(null));
+    }
+    m = m.bind(printf("end\n"));
+    m.runIO();
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src text
+    Exception in thread "main" java.lang.StackOverflowError
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+      at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
+    ...
+    #+end_src
+
+*** 还记得 ~trampoline~ 吗？
+    
+    定义trampoline interface
+
+    #+begin_src java
+    public interface Trampoline<A> {
+
+        Trampoline<A> resume();
+
+        default A runT() {
+            Trampoline<A> t = this;
+            while (!(t instanceof Done)) {
+                t = t.resume();
+            }
+            return ((Done<A>) t).result;
+        }
+
+        default <B> Trampoline<B> flatMap(Function<A, Trampoline<B>> f) {
+            return new FlatMap<>(this, f);
+        }
+
+        default <B> Trampoline<B> map(Function<A, B> f) {
+            return new FlatMap<>(this, a -> done(f.apply(a)));
+        }
+
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    Done
+
+    #+begin_src java
+    @AllArgsConstructor
+    class Done<A> implements Trampoline<A> {
+        private final A result;
+
+        @Override
+        public Trampoline<A> resume() {
+            return this;
+        }
+    }
+
+    static <T> Trampoline<T> done(T t) {
+        return new Done<>(t);
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    More
+
+    #+begin_src java
+    @AllArgsConstructor
+    class More<A> implements Trampoline<A> {
+        private final Supplier<Trampoline<A>> k;
+
+        @Override
+        public Trampoline<A> resume() {
+            return k.get();
+        }
+    }
+
+    static <T> Trampoline<T> more(Supplier<Trampoline<T>> k) {
+        return new More<>(k);
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    FlatMap
+
+    #+ATTR_REVEAL: :frag fade-out
+    #+begin_src scala
+    final def resume: Either [() => Trampoline[A], A] =
+      this match {
+        case Done(v) => Right(v)
+        case More(k) => Left(k)
+        case FlatMap(a, f) => a match {
+          case Done(v) => f(v).resume
+          case More(k) => Left(() =>
+            FlatMap(k(), f))
+          case FlatMap(b, g) =>
+            (FlatMap(b, (x: Any) => FlatMap(g(x), f) ): Trampoline[A]).resume
+        }
+      }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+begin_src java
+    @AllArgsConstructor
+    class FlatMap<B, A> implements Trampoline<A> {
+        private final Trampoline<B> sub;
+        private final Function<B, Trampoline<A>> k;
+        @Override
+        public Trampoline<A> resume() {
+            if (sub instanceof Done) {
+                return k.apply(((Done<B>) sub).result);
+            }
+            if (sub instanceof More) {
+                return new FlatMap<>(((More<B>) sub).k.get(), k);
+            }
+            if (sub instanceof FlatMap) {
+                FlatMap<Object, B> s = (FlatMap<Object, B>) sub;
+                Trampoline<Object> b = s.sub;
+                Function<Object, Trampoline<B>> g = s.k;
+                return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), k));
+            }
+            throw new RuntimeException("unhandled sub type " +
+                                       this.sub.getClass());
+        }
+    }
+    #+end_src
+    
+    #+ATTR_REVEAL: :frag t
+    #+begin_src java
+    static <B, A> Trampoline<A> flatMap(Trampoline<B> sub,
+                                        Function<B, Trampoline<A>> k) {
+        return new FlatMap<>(sub, k);
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    实例
+
+    #+begin_src java
+    public static void main(String[] args) {
+        more(() -> {
+                System.out.print("What's your name? ");
+                return done(null);
+            })
+            .flatMap(v -> done(new Scanner(System.in).nextLine()))
+            .flatMap(name -> {
+                    System.out.printf("Hello, %s!\n", name);
+                    return done(null);
+                })
+            .runT();
+    }
+    #+end_src
+
+*** 使用Trampoline优化IO
+    
+    #+begin_src java
+    public class IO<T> {
+        private final Trampoline<T> value;
+
+        private IO(Trampoline<T> value) {
+            this.value = value;
+        }
+
+        private IO(Supplier<T> value) {
+            this(more(() -> done(value.get())));
+        }
+
+        public static <T> IO<T> ret(T t) {
+            return pure(t);
+        }
+
+        public static <T> IO<T> pure(T t) {
+            return new IO<>(() -> t);
+        }
+
+        public static <A, B> IO<B> fmap(Function<A, B> f, IO<A> fa) {
+            return new IO<>(fa.value.map(f));
+        }
+
+        public static <A, B> IO<B> bind(IO<A> ma, Function<A, IO<B>> func) {
+            return new IO<>(ma.value.flatMap(x -> func.apply(x).value));
+        }
+        // ...
+    }
+    #+end_src
+
+*** 再试一次
+
+    #+begin_src java
+    public static void main(String[] args) {
+        IO<Void> m = printf("trampoline\n")
+            .bind(printf("begin\n"));
+        for (int i = 0; i < 10000; i++) {
+            m = m.bind(IO.ret(0)).bind(IO.ret(null));
+        }
+        m = m.bind(printf("end\n"));
+        m.runIO();
+    }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t    
+    #+begin_src text
+    trampoline
+    begin
+    end
+    #+end_src
+
+** Haxl in Java???
+   
+*** Haxl的原理
+    
+    Concurrency monads A
+    #+begin_src haskell
+    data Fetch a = Done a | Blocked (Fetch a) An
+    #+end_src
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+begin_src haskell
+    class Functor f where
+      fmap :: (a -> b) -> f a -> f b
+
+    class Functor f => Applicative f where
+      pure :: a -> f a
+      (<*>) :: f (a -> b) -> f a -> f b
+
+    class Monad f where
+      return :: a -> f a
+      (>>=) :: f a -> (a -> f b) -> f b
+
+    ap :: (Monad m) => m (a -> b) -> m a -> m b
+    ap mf mx = do
+      f <- mf
+      x <- mx
+      return (f x)
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src haskell
+    instance Functor Fetch where
+      fmap f (Done x) = Done (f x)
+      fmap f (Blocked c) = Blocked (fmap f c)
+
+    instance Monad Fetch where
+      return = Done
+
+      Done a >>= k = k a
+      Blocked c >>= k = Blocked (c >>= k)
+    #+end_src
+
+    #+REVEAL: split
+
+    Applicative concurrency
+
+    #+ATTR_REVEAL: :frag fade-in-then-out
+    #+begin_src haskell
+    instance Applicative Fetch where
+      pure = return
+
+      Done g <*> Done y = Done (g y)
+      Done g <*> Blocked c = Blocked (g <$> c) -- <$> = fmap
+      Blocked c <*> Done y = Blcoked (c <*> Done y)
+      Blocked c <*> Blocked d = Blocked (c <*> d)
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src haskell
+    instance Applicative Fetch where
+      pure = return
+
+      Done f <*> x = f <$> x
+      Blocked c <*> x = Blocked (c <*> x)
+    #+end_src
+
+    #+REVEAL: split
+
+    Fetching data
+
+    #+begin_src haskell
+    newIORef :: a -> IO (IORef a)
+    readIORef :: IORef a -> IO a
+    writeIORef :: IORef a -> a -> IO ()
+
+    data BlockedRequest =
+      forall a . BlockedRequest (Request a) (IORef (FetchStatus a))
+
+    data FetchStatus a
+      = NotFetched
+      | FetchSuccess a
+    #+end_src
+
+    #+begin_src haskell
+    data Result a
+      = Done a
+      | Blocked (Seq BlockedRequest) (Fetch a)
+
+    newtype Fetch a = Fetch { unFetch :: IO (Result a) }
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src haskell
+    instance Applicative Fetch where
+      pure = return
+      Fetch f <*> Fetch x = Fetch $ do
+        f' <- f
+        x' <- x
+        case (f', x') of
+          (Done g, Done y ) -> return (Done (g y))
+          (Done g, Blocked br c ) -> return (Blocked br (g <$> c))
+          (Blocked br c, Done y ) -> return (Blocked br (c <*> return y))
+          (Blocked br1 c, Blocked br2 d) -> return (Blocked (br1 <> br2) (c <*> d))
+    #+end_src
+
+    #+begin_src haskell
+    instance Monad Fetch where
+      return a = Fetch $ return (Done a)
+
+      Fetch m >>= k = Fetch $ do
+        r <- m
+        case r of
+          Done a -> unFetch (k a)
+          Blocked br c -> return (Blocked br (c >>= k))
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src haskell
+    dataFetch :: Request a -> Fetch a
+    dataFetch request = Fetch $ do
+      box ← newIORef NotFetched             -- (1)
+      let br = BlockedRequest request box   -- (2)
+      let cont = Fetch $ do                 -- (3)
+            FetchSuccess a <- readIORef box -- (4)
+            return (Done a)                 -- (5)
+      return (Blocked (singleton br) cont)  -- (6)
+    #+end_src
+    
+    #+ATTR_REVEAL: :frag (appear)
+    - Line 1 creates a new ~IORef~ to store the result, initially containing NotFetched.
+    - Line 2 creates a ~BlockedRequest~ for this request. 
+    - Lines 3–5 define the continuation, which reads the result from the ~IORef~ and returns it in the monad. Note that the contents of the IORef is assumed to be ~FetchSuccess a~ when the continuation is executed. It is an internal error of the framework if this is not true, so we don't attempt to handle the error condition here.
+    - Line 6: ~dataFetch~ returns ~Blocked~ in the monad, including the ~BlockedRequest~.
+
+    #+REVEAL: split
+
+    Running a computation
+
+    #+begin_src haskell
+    fetch :: [BlockedRequest] -> IO ()
+    fetch = undefined
+
+    runFetch :: Fetch a -> IO a
+    runFetch (Fetch h) = do
+      r <- h
+      case r of
+        Done a -> return a
+        Blocked br cont -> do
+          fetch (toList br)
+          runFetch cont
+    #+end_src
+
+*** Java实现
+
+    #+ATTR_REVEAL: :frag (appear)
+    1. Haxl的原理
+    2. 基于Trampoline的IO Monad实现
+    3. 可以实现IORef
+    4. Trampoline可以用于其他Monad的实现
+
+    #+REVEAL: split
+
+    [[https://github.com/shanexu/if-our-language-is-whiskey/tree/master/src/main/java/org/xusheng/ioliw/haxl]]
+
 * 参考文档
 
   1. Why Functional Programming Matters\\
@@ -1157,7 +1608,6 @@
      [[http://book.realworldhaskell.org/read/]]
   6. Category Theory for Programmers\\
      [[https://github.com/hmemcpy/milewski-ctfp-pdf]]
-
 
 * 关于标题
   
