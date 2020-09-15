@@ -31,28 +31,28 @@
   width: 100%;
 }
 
-#slide-2-4-1 div.org-src-container pre {
-  height: 610px;
+#slide-2-4-1 div.org-src-container code {
+  max-height: unset;
 }
 
-#slide-2-4-2 div.org-src-container pre {
-  height: 580px;
+#slide-2-4-2 div.org-src-container code {
+  max-height: unset;
 }
 
-#slide-2-4-3 + section div.org-src-container:first-child pre {
-  height: 530px;
+#slide-2-4-3 + section div.org-src-container:first-child code {
+  max-height: unset;
 }
 
-#slide-2-4-3 + section + section + section div.org-src-container:first-child pre {
-  height: 720px;
+#slide-2-4-3 + section + section + section div.org-src-container:first-child code {
+  max-height: unset;
 }
 
-#slide-2-4-3 + section + section + section + section div.org-src-container:first-child pre {
-  height: 670px;
+#slide-2-4-3 + section + section + section + section div.org-src-container:first-child code {
+  max-height: unset;
 }
 
-#slide-2-4-3 + section + section + section + section + section div.org-src-container:first-child pre {
-  height: 580px;
+#slide-2-4-3 + section + section + section + section + section div.org-src-container:first-child code {
+  max-height: unset;
 }
 
 #slide-3-1-2 h3 {
@@ -64,16 +64,16 @@
   width: 100%;
 }
 
-#slide-3-4 div.org-src-container pre {
-  height: 500px;
+#slide-3-4 div.org-src-container code {
+  max-height: unset;
 }
 
-#slide-4-1 + section pre {
-  height: 450px;
+#slide-4-1 + section code {
+  max-height: unset;
 }
 
-#slide-4-1 + section + section pre {
-  height: 550px;
+#slide-4-1 + section + section code {
+  max-height: unset;
 }
 
 #slide-4-4-1 code {
