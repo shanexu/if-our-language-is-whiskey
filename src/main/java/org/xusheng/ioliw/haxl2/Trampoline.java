@@ -81,7 +81,7 @@ public interface Trampoline<A> {
         return new FlatMap<>(sub, k);
     }
 
-    public static void main(String[] args) {
+    static void main(String[] args) {
         more(() -> {
             System.out.print("What's your name? ");
             return done(null);
