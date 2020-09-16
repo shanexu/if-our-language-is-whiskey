@@ -1352,6 +1352,7 @@
     }
     #+end_src
 
+    #+ATTR_REVEAL: :frag t
     #+begin_src java
     default <B> Trampoline<B> map(Function<A, B> f) {
         return new FlatMap<>(this, a -> done(f.apply(a)));
@@ -1394,19 +1395,12 @@
 *** 使用Trampoline优化IO
     
     #+begin_src java
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     public class IO<T> {
         private final Trampoline<T> value;
 
-        private IO(Trampoline<T> value) {
-            this.value = value;
-        }
-
         private IO(Supplier<T> value) {
             this(more(() -> done(value.get())));
-        }
-
-        public static <T> IO<T> ret(T t) {
-            return pure(t);
         }
 
         public static <T> IO<T> pure(T t) {

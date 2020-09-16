@@ -1,5 +1,7 @@
 package org.xusheng.ioliw.haxl2;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import org.xusheng.ioliw.haxl.ListUtils;
 
 import java.util.List;
@@ -10,12 +12,9 @@ import java.util.function.Supplier;
 import static org.xusheng.ioliw.haxl2.Trampoline.done;
 import static org.xusheng.ioliw.haxl2.Trampoline.more;
 
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class IO<T> {
     private final Trampoline<T> value;
-
-    private IO(Trampoline<T> value) {
-        this.value = value;
-    }
 
     private IO(Supplier<T> value) {
         this(more(() -> done(value.get())));
