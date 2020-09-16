@@ -1239,25 +1239,21 @@
 
     #+begin_src java
     public interface Trampoline<A> {
-
-        Trampoline<A> resume();
-
-        default A runT() {
-            Trampoline<A> t = this;
-            while (!(t instanceof Done)) {
-                t = t.resume();
-            }
-            return ((Done<A>) t).result;
+        default Trampoline<A> jump() {
+            // TODO
         }
 
         default <B> Trampoline<B> flatMap(Function<A, Trampoline<B>> f) {
-            return new FlatMap<>(this, f);
+            // TODO
         }
 
         default <B> Trampoline<B> map(Function<A, B> f) {
-            return new FlatMap<>(this, a -> done(f.apply(a)));
+            // TODO
         }
 
+        default A runT() {
+            // TODO
+        }
     }
     #+end_src
 
@@ -1266,14 +1262,9 @@
     Done
 
     #+begin_src java
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Done<A> implements Trampoline<A> {
         private final A result;
-
-        @Override
-        public Trampoline<A> resume() {
-            return this;
-        }
     }
 
     static <T> Trampoline<T> done(T t) {
@@ -1286,14 +1277,9 @@
     More
 
     #+begin_src java
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class More<A> implements Trampoline<A> {
         private final Supplier<Trampoline<A>> k;
-
-        @Override
-        public Trampoline<A> resume() {
-            return k.get();
-        }
     }
 
     static <T> Trampoline<T> more(Supplier<Trampoline<T>> k) {
@@ -1305,53 +1291,84 @@
 
     FlatMap
 
-    #+ATTR_REVEAL: :frag fade-out
-    #+begin_src scala
-    final def resume: Either [() => Trampoline[A], A] =
-      this match {
-        case Done(v) => Right(v)
-        case More(k) => Left(k)
-        case FlatMap(a, f) => a match {
-          case Done(v) => f(v).resume
-          case More(k) => Left(() =>
-            FlatMap(k(), f))
-          case FlatMap(b, g) =>
-            (FlatMap(b, (x: Any) => FlatMap(g(x), f) ): Trampoline[A]).resume
-        }
-      }
-    #+end_src
-
-    #+ATTR_REVEAL: :frag fade-in-then-out
     #+begin_src java
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class FlatMap<B, A> implements Trampoline<A> {
         private final Trampoline<B> sub;
         private final Function<B, Trampoline<A>> k;
-        @Override
-        public Trampoline<A> resume() {
-            if (sub instanceof Done) {
-                return k.apply(((Done<B>) sub).result);
-            }
-            if (sub instanceof More) {
-                return new FlatMap<>(((More<B>) sub).k.get(), k);
-            }
-            if (sub instanceof FlatMap) {
-                FlatMap<Object, B> s = (FlatMap<Object, B>) sub;
-                Trampoline<Object> b = s.sub;
-                Function<Object, Trampoline<B>> g = s.k;
-                return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), k));
-            }
-            throw new RuntimeException("unhandled sub type " +
-                                       this.sub.getClass());
-        }
     }
-    #+end_src
-    
-    #+ATTR_REVEAL: :frag t
-    #+begin_src java
+
     static <B, A> Trampoline<A> flatMap(Trampoline<B> sub,
                                         Function<B, Trampoline<A>> k) {
         return new FlatMap<>(sub, k);
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    let's jump
+
+    #+ATTR_REVEAL: :frag fade-out
+    #+begin_src java
+    default Trampoline<A> jump() {
+        if (this instanceof Done) {
+            return this;
+        }
+        if (this instanceof More) {
+            return ((More<A>) this).k.get();
+        }
+    #+end_src
+
+    #+ATTR_REVEAL: :frag t
+    #+begin_src java
+        if (this instanceof FlatMap) {
+            Trampoline<Object> a = ((FlatMap<Object, A>) this).sub;
+            Function<Object, Trampoline<A>> f = ((FlatMap<Object, A>) this).k;
+            if (a instanceof Done) {
+                return f.apply(((Done<Object>) a).result);
+            }
+            if (a instanceof More) {
+                return new FlatMap<>(((More<Object>) a).k.get(), f);
+            }
+            if (a instanceof FlatMap) {
+                Trampoline<Object> b = ((FlatMap<Object, Object>) a).sub;
+                Function<Object, Trampoline<Object>> g =
+                    ((FlatMap<Object, Object>) a).k;
+                return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), f));
+            }
+            throw new RuntimeException("unhandled sub type " + a.getClass());
+        }
+        throw new RuntimeException("unhandled type " + this.getClass());
+    }
+    #+end_src
+
+    #+REVEAL: split
+
+    flatMap & map
+    
+    #+begin_src java
+    default <B> Trampoline<B> flatMap(Function<A, Trampoline<B>> f) {
+        return new FlatMap<>(this, f);
+    }
+    #+end_src
+
+    #+begin_src java
+    default <B> Trampoline<B> map(Function<A, B> f) {
+        return new FlatMap<>(this, a -> done(f.apply(a)));
+    }
+    #+end_src
+
+    #+REVEAL: split
+    
+    run!!
+    
+    #+begin_src java
+    default A runT() {
+        Trampoline<A> t = this;
+        while (!(t instanceof Done)) {
+            t = t.jump();
+        }
+        return ((Done<A>) t).result;
     }
     #+end_src
 

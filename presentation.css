@@ -88,16 +88,20 @@
   max-height: unset;
 }
 
-#slide-4-4-5 + section + section + section p {
+#slide-4-4-5 + section + section + section code {
+  max-height: unset;
+}
+
+#slide-4-4-5 + section + section + section + section p {
   position: relative;
 }
 
-#slide-4-4-5 + section + section + section div {
+#slide-4-4-5 + section + section + section + section div {
   position: absolute;
   width: 100%;
 }
 
-#slide-4-4-5 + section + section + section code {
+#slide-4-4-5 + section + section + section + section code {
   max-height: unset;
 }
 

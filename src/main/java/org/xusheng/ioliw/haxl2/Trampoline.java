@@ -1,5 +1,6 @@
 package org.xusheng.ioliw.haxl2;
 
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 
 import java.util.Scanner;
@@ -8,14 +9,31 @@ import java.util.function.Supplier;
 
 public interface Trampoline<A> {
 
-    Trampoline<A> resume();
-
-    default A runT() {
-        Trampoline<A> t = this;
-        while (!(t instanceof Done)) {
-            t = t.resume();
+    default Trampoline<A> jump() {
+        if (this instanceof Done) {
+            return this;
         }
-        return ((Done<A>) t).result;
+        if (this instanceof More) {
+            return ((More<A>) this).k.get();
+        }
+        if (this instanceof FlatMap) {
+            Trampoline<Object> a = ((FlatMap<Object, A>) this).sub;
+            Function<Object, Trampoline<A>> f = ((FlatMap<Object, A>) this).k;
+            if (a instanceof Done) {
+                return f.apply(((Done<Object>) a).result);
+            }
+            if (a instanceof More) {
+                return new FlatMap<>(((More<Object>) a).k.get(), f);
+            }
+            if (a instanceof FlatMap) {
+                Trampoline<Object> b = ((FlatMap<Object, Object>) a).sub;
+                Function<Object, Trampoline<Object>> g =
+                    ((FlatMap<Object, Object>) a).k;
+                return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), f));
+            }
+            throw new RuntimeException("unhandled sub type " + a.getClass());
+        }
+        throw new RuntimeException("unhandled type " + this.getClass());
     }
 
     default <B> Trampoline<B> flatMap(Function<A, Trampoline<B>> f) {
@@ -26,55 +44,36 @@ public interface Trampoline<A> {
         return new FlatMap<>(this, a -> done(f.apply(a)));
     }
 
-    @AllArgsConstructor
+    default A runT() {
+        Trampoline<A> t = this;
+        while (!(t instanceof Done)) {
+            t = t.jump();
+        }
+        return ((Done<A>) t).result;
+    }
+
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Done<A> implements Trampoline<A> {
         private final A result;
-
-        @Override
-        public Trampoline<A> resume() {
-            return this;
-        }
     }
 
     static <T> Trampoline<T> done(T t) {
         return new Done<>(t);
     }
 
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class More<A> implements Trampoline<A> {
         private final Supplier<Trampoline<A>> k;
-
-        @Override
-        public Trampoline<A> resume() {
-            return k.get();
-        }
     }
 
     static <T> Trampoline<T> more(Supplier<Trampoline<T>> k) {
         return new More<>(k);
     }
 
-    @AllArgsConstructor
+    @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class FlatMap<B, A> implements Trampoline<A> {
         private final Trampoline<B> sub;
         private final Function<B, Trampoline<A>> k;
-
-        @Override
-        public Trampoline<A> resume() {
-            if (sub instanceof Done) {
-                return k.apply(((Done<B>) sub).result);
-            }
-            if (sub instanceof More) {
-                return new FlatMap<>(((More<B>) sub).k.get(), k);
-            }
-            if (sub instanceof FlatMap) {
-                FlatMap<Object, B> s = (FlatMap<Object, B>) sub;
-                Trampoline<Object> b = s.sub;
-                Function<Object, Trampoline<B>> g = s.k;
-                return new FlatMap<>(b, x -> new FlatMap<>(g.apply(x), k));
-            }
-            throw new RuntimeException("unhandled sub type " + this.sub.getClass());
-        }
     }
 
     static <B, A> Trampoline<A> flatMap(Trampoline<B> sub, Function<B, Trampoline<A>> k) {
