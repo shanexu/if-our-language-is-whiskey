@@ -949,6 +949,16 @@
     2. Flexibility
     3. Isolation
        
+*** Conclusion
+
+    1. A functor is a type that implements map.
+    2. An applicative is a type that implements apply.
+    3. A monad is a type that implements flatMap.
+
+    [[./imgs/Functor-Applicative-Monad.png]]
+
+
+
 * Haxl
 
   [[./imgs/haxl-logo.png]]
