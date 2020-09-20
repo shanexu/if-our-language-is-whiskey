@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-16 Wed 14:31</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-20 Sun 22:27</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -79,7 +79,7 @@
 <section id="slide-1-2">
 <h3 id="1-2"><span class="section-number-3">1.2</span> Lambda</h3>
 
-<div id="orgcded43d" class="figure">
+<div id="org4fec703" class="figure">
 <p><img src="./imgs/lambda_rainbow.png" alt="lambda_rainbow.png" style="width: 70%;" />
 </p>
 </div>
@@ -134,7 +134,7 @@ Collections
 <h4 id="2-1-1"><span class="section-number-4">2.1.1</span> Iterating through a List</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >for(T t : listOfT) {
+<pre><code class="java" >for(T t : listOfT) {
     // do something
 }
 </code></pre>
@@ -142,7 +142,7 @@ Collections
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >void forEach(Consumer&lt;? super T&gt; action);
+<pre class="fragment"><code class="java" >void forEach(Consumer&lt;? super T&gt; action);
 </code></pre>
 </div>
 
@@ -151,7 +151,7 @@ Collections
 
 <div class="org-src-container">
 
-<pre><code class=" java" >final List&lt;String&gt; friends =
+<pre><code class="java" >final List&lt;String&gt; friends =
     Arrays.asList("Brian", "Nate", "Neal", "Raju", "Sara", "Scott");
 
 for(String name : friends) {
@@ -162,25 +162,25 @@ for(String name : friends) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >friends.forEach((final String name) -&gt; System.out.println(name));
+<pre class="fragment frag-style"><code class="java" >friends.forEach((final String name) -&gt; System.out.println(name));
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >friends.forEach((name) -&gt; System.out.println(name));
+<pre class="fragment frag-style"><code class="java" >friends.forEach((name) -&gt; System.out.println(name));
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >friends.forEach(name -&gt; System.out.println(name));
+<pre class="fragment frag-style"><code class="java" >friends.forEach(name -&gt; System.out.println(name));
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >friends.forEach(System.out::println);
+<pre class="fragment frag-style"><code class="java" >friends.forEach(System.out::println);
 </code></pre>
 </div>
 
@@ -189,7 +189,7 @@ for(String name : friends) {
 <h4 id="2-1-2"><span class="section-number-4">2.1.2</span> Transforming a List</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >List&lt;R&gt; listOfR = new ArrayList&lt;&gt;();
+<pre><code class="java" >List&lt;R&gt; listOfR = new ArrayList&lt;&gt;();
 for(T t : listOfT) {
     R r = map(t);
     listOfR.put(r);
@@ -199,7 +199,7 @@ for(T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >&lt;R&gt; Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper);
+<pre class="fragment frag-style"><code class="java" >&lt;R&gt; Stream&lt;R&gt; map(Function&lt;? super T, ? extends R&gt; mapper);
 </code></pre>
 </div>
 
@@ -208,7 +208,7 @@ for(T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >final List&lt;String&gt; uppercaseNames = new ArrayList&lt;String&gt;();
+<pre><code class="java" >final List&lt;String&gt; uppercaseNames = new ArrayList&lt;String&gt;();
 for(String name : friends) {
     uppercaseNames.add(name.toUpperCase());
 }
@@ -217,20 +217,20 @@ for(String name : friends) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >final List&lt;String&gt; uppercaseNames = new ArrayList&lt;String&gt;();
+<pre class="fragment frag-style"><code class="java" >final List&lt;String&gt; uppercaseNames = new ArrayList&lt;String&gt;();
 friends.forEach(name -&gt; uppercaseNames.add(name.toUpperCase()));
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >friends.stream().map(name -&gt; name.toUpperCase());
+<pre class="fragment frag-style"><code class="java" >friends.stream().map(name -&gt; name.toUpperCase());
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >friends.stream().map(String::toUpperCase);
+<pre class="fragment frag-style"><code class="java" >friends.stream().map(String::toUpperCase);
 </code></pre>
 </div>
 
@@ -239,7 +239,7 @@ friends.forEach(name -&gt; uppercaseNames.add(name.toUpperCase()));
 <h4 id="2-1-3"><span class="section-number-4">2.1.3</span> Finding Elements</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >List filteredListOfT = new LinkedList&lt;&gt;();
+<pre><code class="java" >List filteredListOfT = new LinkedList&lt;&gt;();
 for(T t : listOfT) {
     if (predicate(t)) {
         filteredListOfT.add(t);
@@ -250,7 +250,7 @@ for(T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate);
+<pre class="fragment frag-style"><code class="java" >Stream&lt;T&gt; filter(Predicate&lt;? super T&gt; predicate);
 </code></pre>
 </div>
 
@@ -259,7 +259,7 @@ for(T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >final List&lt;String&gt; startsWithN = new ArrayList&lt;String&gt;();
+<pre><code class="java" >final List&lt;String&gt; startsWithN = new ArrayList&lt;String&gt;();
 for(String name : friends) {
     if(name.startsWith("N")) {
         startsWithN.add(name);
@@ -270,7 +270,7 @@ for(String name : friends) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >final List&lt;String&gt; startsWithN = friends.stream()
+<pre class="fragment frag-style"><code class="java" >final List&lt;String&gt; startsWithN = friends.stream()
     .filter(name -&gt; name.startsWith("N")).collect(Collectors.toList());
 </code></pre>
 </div>
@@ -280,7 +280,7 @@ for(String name : friends) {
 <h4 id="2-1-4"><span class="section-number-4">2.1.4</span> Reducing a Collection to a Single Value</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >T result = null;
+<pre><code class="java" >T result = null;
 for (int i = 0; i &lt; listOfT.size(); i++) {
     T t = listOfT.get(i);
     if (i == 0) {
@@ -294,7 +294,7 @@ for (int i = 0; i &lt; listOfT.size(); i++) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt; accumulator);
+<pre class="fragment frag-style"><code class="java" >Optional&lt;T&gt; reduce(BinaryOperator&lt;T&gt; accumulator);
 </code></pre>
 </div>
 
@@ -303,7 +303,7 @@ for (int i = 0; i &lt; listOfT.size(); i++) {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >T result = identity;
+<pre><code class="java" >T result = identity;
 for (T t : listOfT) {
     result = accumulator(t, result);
 }
@@ -312,7 +312,7 @@ for (T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre class="fragment frag-style"><code class=" java" >T reduce(T identity, BinaryOperator&lt;T&gt; accumulator);
+<pre class="fragment frag-style"><code class="java" >T reduce(T identity, BinaryOperator&lt;T&gt; accumulator);
 </code></pre>
 </div>
 
@@ -321,7 +321,7 @@ for (T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >U result = identity;
+<pre><code class="java" >U result = identity;
 for (T t : listOfT) {
     U partialResult = accumulator(t, result);
     result = combiner(result, partialResult);
@@ -331,7 +331,7 @@ for (T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >&lt;U&gt; U reduce(U identity,
+<pre class="fragment"><code class="java" >&lt;U&gt; U reduce(U identity,
              BiFunction&lt;U, ? super T, U&gt; accumulator,
              BinaryOperator&lt;U&gt; combiner);
 </code></pre>
@@ -342,7 +342,7 @@ for (T t : listOfT) {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >Map&lt;Long, User&gt; userMap = Maps.newHashMap();
+<pre><code class="java" >Map&lt;Long, User&gt; userMap = Maps.newHashMap();
 for (User user : users) {
     userMap.put(user.getId(), user);
 }
@@ -351,7 +351,7 @@ for (User user : users) {
 
 <div class="org-src-container">
 
-<pre class="fragment fade-in-then-out"><code class=" java" >users.stream().reduce(
+<pre class="fragment fade-in-then-out"><code class="java" >users.stream().reduce(
                       Collections.emptyMap(),
                       (Map&lt;Long, User&gt; acc, User user) -&gt; {
                           acc.put(user.getId(), user);
@@ -365,7 +365,7 @@ for (User user : users) {
 
 <div class="org-src-container">
 
-<pre class="fragment fade-in-then-out"><code class=" java" >users.stream().reduce(
+<pre class="fragment fade-in-then-out"><code class="java" >users.stream().reduce(
                       Collections.emptyMap(),
                       (Map&lt;Long, User&gt; acc, User user) -&gt; {
                           HashMap&lt;Long, User&gt; newAcc = Maps.newHashMap(acc);
@@ -381,7 +381,7 @@ for (User user : users) {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >users.stream().collect(Collectors.toMap(User::getId, Function.identity()));
+<pre class="fragment"><code class="java" >users.stream().collect(Collectors.toMap(User::getId, Function.identity()));
 </code></pre>
 </div>
 
@@ -390,7 +390,7 @@ for (User user : users) {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >List&lt;String&gt; friends = ...;
+<pre><code class="java" >List&lt;String&gt; friends = ...;
 
 Optional&lt;String&gt; longestName = Optional.empty();
 for (String name : friends) {
@@ -407,7 +407,7 @@ for (String name : friends) {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >List&lt;String&gt; friends = ...;
+<pre class="fragment"><code class="java" >List&lt;String&gt; friends = ...;
 
 Optional&lt;String&gt; longestName = friends.stream()
     .reduce((name1, name2) -&gt;
@@ -423,7 +423,7 @@ Java SE 8 introduces a new class called <code>java.util.Optional&lt;T&gt;</code>
 </p>
 
 
-<div id="org9346a10" class="figure">
+<div id="org4c97094" class="figure">
 <p><img src="./imgs/optional.gif" alt="optional.gif" />
 </p>
 </div>
@@ -447,7 +447,7 @@ you are not a real Java programmer until you've dealt with a null pointer except
 
 <div class="org-src-container">
 
-<pre><code class=" java" >class Sheep {}
+<pre><code class="java" >class Sheep {}
 
 public static Sheep father(Sheep sheep) {
     // ...
@@ -464,7 +464,7 @@ public static Sheep mother(Sheep sheep) {
 <h4 id="2-2-2"><span class="section-number-4">2.2.2</span> 定义函数 <code>maternalGrandfather</code> ，找羊的外祖父</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static Sheep maternalGrandfather(Sheep s) {
+<pre><code class="java" >public static Sheep maternalGrandfather(Sheep s) {
     Sheep m = mother(s);
     if (m != null) {
         return father(m);
@@ -479,7 +479,7 @@ public static Sheep mother(Sheep sheep) {
 <h4 id="2-2-3"><span class="section-number-4">2.2.3</span> 定义函数 <code>mothersPaternalGrandfather</code> 找羊的曾外祖父(妈的爸的爸)</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static Sheep mothersPaternalGrandfather(Sheep s) {
+<pre><code class="java" >public static Sheep mothersPaternalGrandfather(Sheep s) {
     Sheep m = mother(s);
     if (m != null) {
         Sheep f = father(m);
@@ -496,7 +496,7 @@ public static Sheep mother(Sheep sheep) {
 <section id="slide-2-2-4">
 <h4 id="2-2-4"><span class="section-number-4">2.2.4</span> 定义函数曾曾曾&#x2026;&#x2026;&#x2026;.外祖父？</h4>
 
-<div id="orgbdc621f" class="figure">
+<div id="org1f0de8e" class="figure">
 <p><img src="./imgs/if-hell.jpeg" alt="if-hell.jpeg" class="fragment" />
 </p>
 </div>
@@ -506,7 +506,7 @@ public static Sheep mother(Sheep sheep) {
 <h4 id="2-2-5"><span class="section-number-4">2.2.5</span> 如果我们使用 <code>Optional</code></h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static Optional&lt;Sheep&gt; fatherOpt(Sheep sheep) {
+<pre><code class="java" >public static Optional&lt;Sheep&gt; fatherOpt(Sheep sheep) {
     return Optional.ofNullable(father(sheep));
 }
 
@@ -521,7 +521,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 <h4 id="2-2-6"><span class="section-number-4">2.2.6</span> 定义函数 <code>maternalGrandfatherOpt</code> ，找羊的外祖父</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static Optional&lt;Sheep&gt; maternalGrandfatherOpt(Sheep s) {
+<pre><code class="java" >public static Optional&lt;Sheep&gt; maternalGrandfatherOpt(Sheep s) {
     return motherOpt(s).flatMap(OptionalSample::fatherOpt);
 }
 </code></pre>
@@ -532,7 +532,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 <h4 id="2-2-7"><span class="section-number-4">2.2.7</span> 现在定义函数 <code>mothersPaternalGrandfatherOpt</code> 找羊的曾外祖父(妈的爸的爸)</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static Optional&lt;Sheep&gt; mothersPaternalGrandfatherOpt(Sheep s) {
+<pre><code class="java" >public static Optional&lt;Sheep&gt; mothersPaternalGrandfatherOpt(Sheep s) {
     return motherOpt(s)
         .flatMap(OptionalSample::fatherOpt)
         .flatMap(OptionalSample::fatherOpt);
@@ -546,7 +546,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 <h4 id="2-2-8"><span class="section-number-4">2.2.8</span> 现在定义函数 <code>mothersFathersMothersFathersMotherOpt</code> 找羊的妈的爸的妈的爸的妈</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static Optional&lt;Sheep&gt; mothersFathersMothersFathersMotherOpt(Sheep s) {
+<pre><code class="java" >public static Optional&lt;Sheep&gt; mothersFathersMothersFathersMotherOpt(Sheep s) {
     return motherOpt(s)
         .flatMap(OptionalSample::fatherOpt)
         .flatMap(OptionalSample::motherOpt)
@@ -561,7 +561,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 <h3 id="2-3"><span class="section-number-3">2.3</span> working with resources</h3>
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >interface RedisOperation&lt;T&gt; {
+<pre class="fragment"><code class="java" >interface RedisOperation&lt;T&gt; {
     T run(Jedis jedis);
 }
 </code></pre>
@@ -569,7 +569,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >class JedisPoolWrapper {
+<pre class="fragment"><code class="java" >class JedisPoolWrapper {
     private final JedisPool pool;
     public JedisPoolWrapper(JedisPool pool) {
         this.pool = pool;
@@ -588,7 +588,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >jedisPoolWrapper.run(jedis -&gt; jedis.get("hello.world"));
+<pre class="fragment"><code class="java" >jedisPoolWrapper.run(jedis -&gt; jedis.get("hello.world"));
 </code></pre>
 </div>
 
@@ -602,7 +602,7 @@ public static Optional&lt;Sheep&gt; motherOpt(Sheep sheep) {
 <h4 id="2-4-1"><span class="section-number-4">2.4.1</span> Tail-Call Optimization (TCO)</h4>
 <div class="org-src-container">
 
-<pre><code class=" c" >#include &lt;stdio.h&gt;
+<pre><code class="c" >#include &lt;stdio.h&gt;
 
 int even(int n);
 int odd(int n);
@@ -632,25 +632,25 @@ int main() {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" text" >$ gcc main.c &amp;&amp; ./a.out
+<pre class="fragment"><code class="text" >$ gcc main.c &amp;&amp; ./a.out
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" text" >[1]    79338 segmentation fault  ./a.out
+<pre class="fragment"><code class="text" >[1]    79338 segmentation fault  ./a.out
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" text" >$ gcc -O2 main.c &amp;&amp; ./a.out
+<pre class="fragment"><code class="text" >$ gcc -O2 main.c &amp;&amp; ./a.out
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" text" >1
+<pre class="fragment"><code class="text" >1
 </code></pre>
 </div>
 
@@ -659,20 +659,20 @@ int main() {
 
 <div class="org-src-container">
 
-<pre><code class=" text" >$ gcc -S -O2 main.c -o main_tco.s
+<pre><code class="text" >$ gcc -S -O2 main.c -o main_tco.s
 $ gcc -S main.c -o main_no_tco.s
 </code></pre>
 </div>
 
 
-<div id="orgef4f707" class="figure">
+<div id="orge122d3e" class="figure">
 <p><img src="./imgs/Xnip2020-06-03_13-55-16.png" alt="Xnip2020-06-03_13-55-16.png" class="fragment fade-in-then-out" />
 </p>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" c" >int even(int n) {
+<pre class="fragment"><code class="c" >int even(int n) {
   if (n == 0) {
     return 1;
   }
@@ -694,7 +694,7 @@ $ gcc -S main.c -o main_no_tco.s
 <h4 id="2-4-2"><span class="section-number-4">2.4.2</span> Java does not provide Tail-Call Optimization (TCO)</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >package org.xusheng.ioliw.tco;
+<pre><code class="java" >package org.xusheng.ioliw.tco;
 
 public class NoTCO {
     private static boolean even(int n) {
@@ -723,7 +723,7 @@ public class NoTCO {
 
 <div class="org-src-container">
 
-<pre><code class=" text" >Exception in thread "main" java.lang.StackOverflowError
+<pre><code class="text" >Exception in thread "main" java.lang.StackOverflowError
   at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
   at org.xusheng.ioliw.tco.NoTCO.even(NoTCO.java:8)
   at org.xusheng.ioliw.tco.NoTCO.odd(NoTCO.java:15)
@@ -738,7 +738,7 @@ public class NoTCO {
 <section id="slide-2-4-3">
 <h4 id="2-4-3"><span class="section-number-4">2.4.3</span> Trampolines</h4>
 
-<div id="orgdfb3fd3" class="figure">
+<div id="org63c9d63" class="figure">
 <p><img src="./imgs/trampoline.png" alt="trampoline.png" />
 </p>
 </div>
@@ -748,7 +748,7 @@ public class NoTCO {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >package org.xusheng.ioliw.tco;
+<pre><code class="java" >package org.xusheng.ioliw.tco;
 
 import java.util.stream.Stream;
 
@@ -775,7 +775,7 @@ public interface Trampoline&lt;T&gt; {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >static &lt;T&gt; Trampoline&lt;T&gt; done(final T result) {
+<pre><code class="java" >static &lt;T&gt; Trampoline&lt;T&gt; done(final T result) {
     return () -&gt; result;
 }
 </code></pre>
@@ -786,7 +786,7 @@ public interface Trampoline&lt;T&gt; {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >static &lt;T&gt; Trampoline&lt;T&gt; more(final Trampoline&lt;Trampoline&lt;T&gt;&gt; trampoline) {
+<pre><code class="java" >static &lt;T&gt; Trampoline&lt;T&gt; more(final Trampoline&lt;Trampoline&lt;T&gt;&gt; trampoline) {
     return new Trampoline&lt;T&gt;() {
         @Override
         public boolean complete() {
@@ -820,7 +820,7 @@ public interface Trampoline&lt;T&gt; {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >package org.xusheng.ioliw.tco;
+<pre><code class="java" >package org.xusheng.ioliw.tco;
 
 import static org.xusheng.ioliw.tco.Trampoline.done;
 import static org.xusheng.ioliw.tco.Trampoline.more;
@@ -852,7 +852,7 @@ public class UseTrampoline {
 
 <div class="org-src-container">
 
-<pre><code class=" java" >public static long fibonacciNaive(long n) {
+<pre><code class="java" >public static long fibonacciNaive(long n) {
     if (n == 0) {
         return 0;
     }
@@ -880,7 +880,7 @@ public static void main(String[] args) {
 <section>
 
 
-<div id="orge27be96" class="figure">
+<div id="orgae993ce" class="figure">
 <p><img src="./imgs/trampoline-class.png" alt="trampoline-class.png" />
 </p>
 </div>
@@ -891,7 +891,7 @@ public static void main(String[] args) {
 <section id="slide-3">
 <h2 id="3"><span class="section-number-2">3</span> Haskell函数式编程语言</h2>
 
-<div id="orgbb1b2a8" class="figure">
+<div id="orgdd3afaf" class="figure">
 <p><object type="image/svg+xml" data="./imgs/haskell-logo.svg" class="org-svg" style="background-color: white;">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -904,6 +904,20 @@ An advanced, purely functional programming language
 </blockquote>
 
 </section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class="haskell" >quicksort :: Ord a =&gt; [a] -&gt; [a]
+quicksort []     = []
+quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
+  where
+    lesser  = filter (&lt; p) xs
+    greater = filter (&gt;= p) xs
+</code></pre>
+</div>
+
+</section>
 <section id="slide-3-1">
 <h3 id="3-1"><span class="section-number-3">3.1</span> 关于 <code>Haskell</code> 的段子</h3>
 <div class="outline-text-3" id="text-3-1">
@@ -912,7 +926,7 @@ An advanced, purely functional programming language
 <section id="slide-3-1-1">
 <h4 id="3-1-1"><span class="section-number-4">3.1.1</span> how to learn Haskell</h4>
 
-<div id="org470bf99" class="figure">
+<div id="orge5eca34" class="figure">
 <p><img src="./imgs/howtolearnhaskell.png" alt="howtolearnhaskell.png" />
 </p>
 </div>
@@ -921,13 +935,13 @@ An advanced, purely functional programming language
 <section id="slide-3-1-2">
 <h4 id="3-1-2"><span class="section-number-4">3.1.2</span> learning curves for different programming languages</h4>
 
-<div id="orgc764273" class="figure">
+<div id="org23750bd" class="figure">
 <p><img src="./imgs/java.png" alt="java.png" class="fragment fade-in-then-out" />
 </p>
 </div>
 
 
-<div id="orgb4b66eb" class="figure">
+<div id="orgd77dcaf" class="figure">
 <p><img src="./imgs/haskell.png" alt="haskell.png" class="fragment" />
 </p>
 </div>
@@ -936,7 +950,7 @@ An advanced, purely functional programming language
 <section>
 
 
-<div id="org81ae184" class="figure">
+<div id="org90a5269" class="figure">
 <p><img src="./imgs/learningcurve.jpg" alt="learningcurve.jpg" style="width: 70%;" />
 </p>
 </div>
@@ -945,7 +959,7 @@ An advanced, purely functional programming language
 <section id="slide-3-1-3">
 <h4 id="3-1-3"><span class="section-number-4">3.1.3</span> code written in Haskell is guaranteed to have no side effects</h4>
 
-<div id="org547a396" class="figure">
+<div id="org989dd04" class="figure">
 <p><img src="./imgs/haskell_2x.png" alt="haskell_2x.png" style="width: 30%;" />
 </p>
 </div>
@@ -957,7 +971,7 @@ An advanced, purely functional programming language
 <code>Real World Hashell</code>
 </p>
 
-<div id="orgc1f75f9" class="figure">
+<div id="org47b28fd" class="figure">
 <p><img src="./imgs/realworldhaskell.jpg" alt="realworldhaskell.jpg" />
 </p>
 </div>
@@ -980,7 +994,7 @@ An advanced, purely functional programming language
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >double :: Int -&gt; Int
+<pre><code class="haskell" >double :: Int -&gt; Int
 double i = i + i
 
 square :: Int -&gt; Int
@@ -996,7 +1010,7 @@ factorial n = product [1..n]
 <h3 id="3-3"><span class="section-number-3">3.3</span> immutable data</h3>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >data Person = Person { firstName :: String
+<pre><code class="haskell" >data Person = Person { firstName :: String
                      , lastName :: String
                      } deriving (Show)
 
@@ -1013,7 +1027,7 @@ data User = User Int String
 <h3 id="3-4"><span class="section-number-3">3.4</span> first-class function</h3>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >add :: Int -&gt; Int -&gt; Int
+<pre><code class="haskell" >add :: Int -&gt; Int -&gt; Int
 add a b = a + b
 
 adder1 :: Int -&gt; Int
@@ -1039,7 +1053,7 @@ map (\i -&gt; ( i + 1) * 2) [1, 2, 3]
 <h3 id="3-5"><span class="section-number-3">3.5</span> lazy</h3>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >fib = 0 : 1 : [ a+b | (a,b) &lt;- zip fib (tail fib) ]
+<pre><code class="haskell" >fib = 0 : 1 : [ a+b | (a,b) &lt;- zip fib (tail fib) ]
 
 take 11 fib
 
@@ -1052,7 +1066,7 @@ fib !! 11
 <h3 id="3-6"><span class="section-number-3">3.6</span> handle side effect</h3>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >hello :: String -&gt; IO ()
+<pre><code class="haskell" >hello :: String -&gt; IO ()
 hello who = putStrLn ("Hello, " ++ who ++ "!")
 
 main :: IO ()
@@ -1070,7 +1084,7 @@ main = hello "World"
 <h4 id="3-7-1"><span class="section-number-4">3.7.1</span> Functor</h4>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >class Functor f where
+<pre><code class="haskell" >class Functor f where
     fmap :: (a -&gt; b) -&gt; f a -&gt; f b
 </code></pre>
 </div>
@@ -1080,7 +1094,7 @@ main = hello "World"
 <h4 id="3-7-2"><span class="section-number-4">3.7.2</span> Applicative</h4>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >class (Functor f) =&gt; Applicative f where
+<pre><code class="haskell" >class (Functor f) =&gt; Applicative f where
     pure  :: a -&gt; f a
     (&lt;*&gt;) :: f (a -&gt; b) -&gt; f a -&gt; f b'
 </code></pre>
@@ -1091,7 +1105,7 @@ main = hello "World"
 <h4 id="3-7-3"><span class="section-number-4">3.7.3</span> Monad</h4>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >class Monad m where
+<pre><code class="haskell" >class Monad m where
     (&gt;&gt;=)  :: m a -&gt; (a -&gt; m b) -&gt; m b
     (&gt;&gt;)   :: m a -&gt;  m b       -&gt; m b
     return ::   a               -&gt; m a
@@ -1107,7 +1121,7 @@ Optional
 </p>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >data Optional t
+<pre><code class="haskell" >data Optional t
   = Some t
   | None deriving (Eq, Ord, Show)
 </code></pre>
@@ -1115,7 +1129,7 @@ Optional
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >instance Functor Optional where
+<pre><code class="haskell" >instance Functor Optional where
   fmap _ None = None
   fmap f (Some x)  = Some (f x)
 </code></pre>
@@ -1123,7 +1137,7 @@ Optional
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >instance Applicative Optional where
+<pre><code class="haskell" >instance Applicative Optional where
   pure = Some
   None &lt;*&gt; a = None
   Some f &lt;*&gt; a = fmap f a
@@ -1132,7 +1146,7 @@ Optional
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >instance Monad Optional where
+<pre><code class="haskell" >instance Monad Optional where
   None &gt;&gt;= f = None
   Some x &gt;&gt;= f = f x
 </code></pre>
@@ -1147,7 +1161,7 @@ Maybe is a Monad
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >Just 1
+<pre><code class="haskell" >Just 1
   &gt;&gt; return 2
   &gt;&gt;= \t -&gt; return (t+1)
 </code></pre>
@@ -1174,7 +1188,7 @@ Haskell的 <code>Maybe</code> 就是Java的 <code>Optional</code> 。
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >data Sheep = Sheep Int Name
+<pre><code class="haskell" >data Sheep = Sheep Int Name
 
 fatherMaybe :: Sheep -&gt; Maybe Sheep
 fatherMaybe s = undefined
@@ -1192,7 +1206,7 @@ motherMaybe = undefined
 </p>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >mothersFathersMothersFathersMotherMaybe :: Sheep -&gt; Maybe Sheep
+<pre><code class="haskell" >mothersFathersMothersFathersMotherMaybe :: Sheep -&gt; Maybe Sheep
 mothersFathersMothersFathersMotherMaybe s =
   motherMaybe s &gt;&gt;=
   fatherMaybe &gt;&gt;=
@@ -1211,7 +1225,7 @@ IO is a Monad
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >putStrLn "Who are you?"
+<pre><code class="haskell" >putStrLn "Who are you?"
   &gt;&gt; getLine
   &gt;&gt;= \name -&gt; putStrLn ("Hello, " ++ name ++ "!")
 </code></pre>
@@ -1219,7 +1233,7 @@ IO is a Monad
 
 <div class="org-src-container">
 
-<pre><code class=" text" >Prelude&gt; :{
+<pre><code class="text" >Prelude&gt; :{
 Prelude| :type putStrLn "Who are you?"
 Prelude|   &gt;&gt; getLine
 Prelude|   &gt;&gt;= \name -&gt; putStrLn ("Hello, " ++ name ++ "!")
@@ -1234,7 +1248,7 @@ Prelude&gt;
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >do
+<pre><code class="haskell" >do
   name &lt;- getLine
   putStrLn ("Hello, " ++ name + "!")
 </code></pre>
@@ -1260,7 +1274,7 @@ Why Monad?
 <section id="slide-4">
 <h2 id="4"><span class="section-number-2">4</span> Haxl</h2>
 
-<div id="org83d170f" class="figure">
+<div id="org72770d6" class="figure">
 <p><img src="./imgs/haxl-logo.png" alt="haxl-logo.png" />
 </p>
 </div>
@@ -1286,7 +1300,7 @@ Haxl是一个基于Monad的优雅的数据加载框架。
 
 <div class="org-src-container">
 
-<pre><code class=" text" >$ stack setup
+<pre><code class="text" >$ stack setup
 $ stack run
 </code></pre>
 </div>
@@ -1296,7 +1310,7 @@ $ stack run
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >{-# LANGUAGE OverloadedStrings #-}
+<pre><code class="haskell" >{-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
@@ -1320,7 +1334,7 @@ main = do
 
 <div class="org-src-container">
 
-<pre><code class=" text" >raw:
+<pre><code class="text" >raw:
 select postid from postinfo;
 select content from postcontent where postid = 1;
 select content from postcontent where postid = 2;
@@ -1349,7 +1363,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 假设几个数据之间依赖关系如下：
 </p>
 
-<div id="org23ce8ac" class="figure">
+<div id="org846ccb5" class="figure">
 <p><img src="./imgs/deps.png" alt="deps.png" />
 </p>
 </div>
@@ -1361,7 +1375,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 一种资源获取/计算的执行计划可以如下：
 </p>
 
-<div id="org3d14fde" class="figure">
+<div id="orgb0ee81f" class="figure">
 <p><img src="./imgs/schedule.png" alt="schedule.png" />
 </p>
 </div>
@@ -1370,7 +1384,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 <section id="slide-4-3">
 <h3 id="4-3"><span class="section-number-3">4.3</span> scala fetch</h3>
 
-<div id="orge5b17c9" class="figure">
+<div id="orgfc07e19" class="figure">
 <p><object type="image/svg+xml" data="./imgs/fetch-logo.svg" class="org-svg" style="background-color: white;">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -1385,7 +1399,7 @@ Sorry, your browser does not support SVG.</object>
 <h4 id="4-3-1"><span class="section-number-4">4.3.1</span> 一个例子</h4>
 <div class="org-src-container">
 
-<pre><code class=" scala" data-line-numbers>package org.xusheng.ioliw
+<pre><code class="scala" data-line-numbers>package org.xusheng.ioliw
 
 import cats.data.NonEmptyList
 import cats.effect._
@@ -1476,7 +1490,7 @@ object sample {
 
 <div class="org-src-container">
 
-<pre><code class=" text" >--&gt; [19] Batch Nodes NonEmptyList(D, E, F)
+<pre><code class="text" >--&gt; [19] Batch Nodes NonEmptyList(D, E, F)
 &lt;-- [19] Batch Nodes NonEmptyList(D, E, F)
 --&gt; [21] Batch Nodes NonEmptyList(B, C)
 &lt;-- [21] Batch Nodes NonEmptyList(B, C)
@@ -1495,7 +1509,7 @@ object sample {
 <h4 id="4-4-1"><span class="section-number-4">4.4.1</span> 一个简单的实现</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public class IO&lt;T&gt; {
+<pre><code class="java" >public class IO&lt;T&gt; {
     private final Supplier&lt;T&gt; value;
 
     private IO(Supplier&lt;T&gt; value) {
@@ -1522,7 +1536,7 @@ object sample {
 <h4 id="4-4-2"><span class="section-number-4">4.4.2</span> 写几个util</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static IO&lt;Void&gt; printf(PrintStream s, String format, Object... args) {
+<pre><code class="java" >public static IO&lt;Void&gt; printf(PrintStream s, String format, Object... args) {
     return IO.of(() -&gt; {
             s.printf(format, args);
             return null;
@@ -1548,7 +1562,7 @@ public static IO&lt;String&gt; readLine() {
 <h4 id="4-4-3"><span class="section-number-4">4.4.3</span> 使用实例</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static void main(String[] args) {
+<pre><code class="java" >public static void main(String[] args) {
     printf("What's your name? ")
         .bind(readLine()).bind(name -&gt; printf("Hello, %s\n", name))
         .bind(printf("How old are you? "))
@@ -1564,7 +1578,7 @@ public static IO&lt;String&gt; readLine() {
 <h4 id="4-4-4"><span class="section-number-4">4.4.4</span> 但是&#x2026;&#x2026;</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >IO&lt;Void&gt; m = printf("function composition\n")
+<pre><code class="java" >IO&lt;Void&gt; m = printf("function composition\n")
     .bind(printf("begin\n"));
 for (int i = 0; i &lt; 10000; i++) {
     m = m.bind(IO.ret(1)).bind(IO.ret(null));
@@ -1576,7 +1590,7 @@ m.runIO();
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" text" >Exception in thread "main" java.lang.StackOverflowError
+<pre class="fragment"><code class="text" >Exception in thread "main" java.lang.StackOverflowError
   at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
   at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
   at org.xusheng.ioliw.haxl.IO.lambda$bind$4(IO.java:44)
@@ -1600,7 +1614,7 @@ m.runIO();
 
 <div class="org-src-container">
 
-<pre><code class=" java" >public interface Trampoline&lt;A&gt; {
+<pre><code class="java" >public interface Trampoline&lt;A&gt; {
     default Trampoline&lt;A&gt; jump() {
         // TODO
     }
@@ -1629,7 +1643,7 @@ Done
 
 <div class="org-src-container">
 
-<pre><code class=" java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
+<pre><code class="java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
 class Done&lt;A&gt; implements Trampoline&lt;A&gt; {
     private final A result;
 }
@@ -1649,7 +1663,7 @@ More
 
 <div class="org-src-container">
 
-<pre><code class=" java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
+<pre><code class="java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
 class More&lt;A&gt; implements Trampoline&lt;A&gt; {
     private final Supplier&lt;Trampoline&lt;A&gt;&gt; k;
 }
@@ -1669,7 +1683,7 @@ FlatMap
 
 <div class="org-src-container">
 
-<pre><code class=" java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
+<pre><code class="java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
 class FlatMap&lt;B, A&gt; implements Trampoline&lt;A&gt; {
     private final Trampoline&lt;B&gt; sub;
     private final Function&lt;B, Trampoline&lt;A&gt;&gt; k;
@@ -1691,7 +1705,7 @@ let's jump
 
 <div class="org-src-container">
 
-<pre class="fragment fade-out"><code class=" java" >default Trampoline&lt;A&gt; jump() {
+<pre class="fragment fade-out"><code class="java" >default Trampoline&lt;A&gt; jump() {
     if (this instanceof Done) {
         return this;
     }
@@ -1703,7 +1717,7 @@ let's jump
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >    if (this instanceof FlatMap) {
+<pre class="fragment"><code class="java" >    if (this instanceof FlatMap) {
         Trampoline&lt;Object&gt; a = ((FlatMap&lt;Object, A&gt;) this).sub;
         Function&lt;Object, Trampoline&lt;A&gt;&gt; f = ((FlatMap&lt;Object, A&gt;) this).k;
         if (a instanceof Done) {
@@ -1734,7 +1748,7 @@ flatMap &amp; map
 
 <div class="org-src-container">
 
-<pre><code class=" java" >default &lt;B&gt; Trampoline&lt;B&gt; flatMap(Function&lt;A, Trampoline&lt;B&gt;&gt; f) {
+<pre><code class="java" >default &lt;B&gt; Trampoline&lt;B&gt; flatMap(Function&lt;A, Trampoline&lt;B&gt;&gt; f) {
     return new FlatMap&lt;&gt;(this, f);
 }
 </code></pre>
@@ -1742,7 +1756,7 @@ flatMap &amp; map
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" java" >default &lt;B&gt; Trampoline&lt;B&gt; map(Function&lt;A, B&gt; f) {
+<pre class="fragment"><code class="java" >default &lt;B&gt; Trampoline&lt;B&gt; map(Function&lt;A, B&gt; f) {
     return new FlatMap&lt;&gt;(this, a -&gt; done(f.apply(a)));
 }
 </code></pre>
@@ -1757,7 +1771,7 @@ run!!
 
 <div class="org-src-container">
 
-<pre><code class=" java" >default A runT() {
+<pre><code class="java" >default A runT() {
     Trampoline&lt;A&gt; t = this;
     while (!(t instanceof Done)) {
         t = t.jump();
@@ -1776,7 +1790,7 @@ run!!
 
 <div class="org-src-container">
 
-<pre><code class=" java" >public static void main(String[] args) {
+<pre><code class="java" >public static void main(String[] args) {
     more(() -&gt; {
             System.out.print("What's your name? ");
             return done(null);
@@ -1796,7 +1810,7 @@ run!!
 <h4 id="4-4-6"><span class="section-number-4">4.4.6</span> 使用Trampoline优化IO</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
+<pre><code class="java" >@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class IO&lt;T&gt; {
     private final Trampoline&lt;T&gt; value;
 
@@ -1825,7 +1839,7 @@ public class IO&lt;T&gt; {
 <h4 id="4-4-7"><span class="section-number-4">4.4.7</span> 再试一次</h4>
 <div class="org-src-container">
 
-<pre><code class=" java" >public static void main(String[] args) {
+<pre><code class="java" >public static void main(String[] args) {
     IO&lt;Void&gt; m = printf("trampoline\n")
         .bind(printf("begin\n"));
     for (int i = 0; i &lt; 10000; i++) {
@@ -1839,7 +1853,7 @@ public class IO&lt;T&gt; {
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" text" >trampoline
+<pre class="fragment"><code class="text" >trampoline
 begin
 end
 </code></pre>
@@ -1858,13 +1872,13 @@ Concurrency monads A
 </p>
 <div class="org-src-container">
 
-<pre><code class=" haskell" >data Fetch a = Done a | Blocked (Fetch a) An
+<pre><code class="haskell" >data Fetch a = Done a | Blocked (Fetch a) An
 </code></pre>
 </div>
 
 <div class="org-src-container">
 
-<pre class="fragment fade-in-then-out"><code class=" haskell" >class Functor f where
+<pre class="fragment fade-in-then-out"><code class="haskell" >class Functor f where
   fmap :: (a -&gt; b) -&gt; f a -&gt; f b
 
 class Functor f =&gt; Applicative f where
@@ -1885,7 +1899,7 @@ ap mf mx = do
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" haskell" >instance Functor Fetch where
+<pre class="fragment"><code class="haskell" >instance Functor Fetch where
   fmap f (Done x) = Done (f x)
   fmap f (Blocked c) = Blocked (fmap f c)
 
@@ -1906,7 +1920,7 @@ Applicative concurrency
 
 <div class="org-src-container">
 
-<pre class="fragment fade-in-then-out"><code class=" haskell" >instance Applicative Fetch where
+<pre class="fragment fade-in-then-out"><code class="haskell" >instance Applicative Fetch where
   pure = return
 
   Done g &lt;*&gt; Done y = Done (g y)
@@ -1918,7 +1932,7 @@ Applicative concurrency
 
 <div class="org-src-container">
 
-<pre class="fragment"><code class=" haskell" >instance Applicative Fetch where
+<pre class="fragment"><code class="haskell" >instance Applicative Fetch where
   pure = return
 
   Done f &lt;*&gt; x = f &lt;$&gt; x
@@ -1935,7 +1949,7 @@ Fetching data
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >newIORef :: a -&gt; IO (IORef a)
+<pre><code class="haskell" >newIORef :: a -&gt; IO (IORef a)
 readIORef :: IORef a -&gt; IO a
 writeIORef :: IORef a -&gt; a -&gt; IO ()
 
@@ -1950,7 +1964,7 @@ data FetchStatus a
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >data Result a
+<pre><code class="haskell" >data Result a
   = Done a
   | Blocked (Seq BlockedRequest) (Fetch a)
 
@@ -1963,7 +1977,7 @@ newtype Fetch a = Fetch { unFetch :: IO (Result a) }
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >instance Applicative Fetch where
+<pre><code class="haskell" >instance Applicative Fetch where
   pure = return
   Fetch f &lt;*&gt; Fetch x = Fetch $ do
     f' &lt;- f
@@ -1978,7 +1992,7 @@ newtype Fetch a = Fetch { unFetch :: IO (Result a) }
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >instance Monad Fetch where
+<pre><code class="haskell" >instance Monad Fetch where
   return a = Fetch $ return (Done a)
 
   Fetch m &gt;&gt;= k = Fetch $ do
@@ -1994,7 +2008,7 @@ newtype Fetch a = Fetch { unFetch :: IO (Result a) }
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >dataFetch :: Request a -&gt; Fetch a
+<pre><code class="haskell" >dataFetch :: Request a -&gt; Fetch a
 dataFetch request = Fetch $ do
   box ← newIORef NotFetched             -- (1)
   let br = BlockedRequest request box   -- (2)
@@ -2022,7 +2036,7 @@ Running a computation
 
 <div class="org-src-container">
 
-<pre><code class=" haskell" >fetch :: [BlockedRequest] -&gt; IO ()
+<pre><code class="haskell" >fetch :: [BlockedRequest] -&gt; IO ()
 fetch = undefined
 
 runFetch :: Fetch a -&gt; IO a
@@ -2085,7 +2099,7 @@ runFetch (Fetch h) = do
 </p>
 
 
-<div id="orgc2326c2" class="figure">
+<div id="org5c80c9f" class="figure">
 <p><img src="./imgs/cover.jpg" alt="cover.jpg" />
 </p>
 </div>
