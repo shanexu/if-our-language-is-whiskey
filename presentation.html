@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-21 Mon 00:00</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-12</h2><p class="date">Created: 2020-09-23 Wed 02:18</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -52,7 +52,7 @@
 </ul>
 
 </section>
-<section id="slide-1-1">
+<section id="slide-1-1" data-background-image="./imgs/Richard-Feynman.jpg" data-background-opacity="0.2">
 <h3 id="1-1"><span class="section-number-3">1.1</span> 费曼的彩虹</h3>
 <blockquote>
 <p>
@@ -62,8 +62,7 @@
 </blockquote>
 
 </section>
-<section>
-
+<section :reveal_extra_attr: data-background-image="./imgs/CA-Feynman-2.jpg" data-background-opacity="0.2">
 <blockquote>
 <p>
 “我会说他的灵感来自于他认为彩虹很美。”<br />
@@ -79,7 +78,7 @@
 <section id="slide-1-2">
 <h3 id="1-2"><span class="section-number-3">1.2</span> Lambda</h3>
 
-<div id="org2bf6567" class="figure">
+<div id="org22ce5ad" class="figure">
 <p><img src="./imgs/lambda_rainbow.png" alt="lambda_rainbow.png" style="width: 70%;" />
 </p>
 </div>
@@ -423,7 +422,7 @@ Java SE 8 introduces a new class called <code>java.util.Optional&lt;T&gt;</code>
 </p>
 
 
-<div id="org7a39eb5" class="figure">
+<div id="org297106f" class="figure">
 <p><img src="./imgs/optional.gif" alt="optional.gif" />
 </p>
 </div>
@@ -496,7 +495,7 @@ public static Sheep mother(Sheep sheep) {
 <section id="slide-2-2-4">
 <h4 id="2-2-4"><span class="section-number-4">2.2.4</span> 定义函数曾曾曾&#x2026;&#x2026;&#x2026;.外祖父？</h4>
 
-<div id="org9474a60" class="figure">
+<div id="orgdae8500" class="figure">
 <p><img src="./imgs/if-hell.jpeg" alt="if-hell.jpeg" class="fragment" />
 </p>
 </div>
@@ -665,7 +664,7 @@ $ gcc -S main.c -o main_no_tco.s
 </div>
 
 
-<div id="org4d876ff" class="figure">
+<div id="org3af89fb" class="figure">
 <p><img src="./imgs/Xnip2020-06-03_13-55-16.png" alt="Xnip2020-06-03_13-55-16.png" class="fragment fade-in-then-out" />
 </p>
 </div>
@@ -735,10 +734,10 @@ public class NoTCO {
 
 
 </section>
-<section id="slide-2-4-3">
+<section id="slide-2-4-3" data-background-image="./imgs/trampoline_girls.jpg" data-background-opacity="0.2">
 <h4 id="2-4-3"><span class="section-number-4">2.4.3</span> Trampolines</h4>
 
-<div id="org139f50b" class="figure">
+<div id="org03ed016" class="figure">
 <p><img src="./imgs/trampoline.png" alt="trampoline.png" />
 </p>
 </div>
@@ -880,7 +879,7 @@ public static void main(String[] args) {
 <section>
 
 
-<div id="orgc3c421c" class="figure">
+<div id="orga125415" class="figure">
 <p><img src="./imgs/trampoline-class.png" alt="trampoline-class.png" />
 </p>
 </div>
@@ -888,10 +887,10 @@ public static void main(String[] args) {
 </section>
 </section>
 <section>
-<section id="slide-3">
+<section id="slide-3" data-background-iframe="https://www.haskell.org/" data-background-interactive data-background-opacity="0.2">
 <h2 id="3"><span class="section-number-2">3</span> Haskell函数式编程语言</h2>
 
-<div id="orgb3bc00a" class="figure">
+<div id="org7859b6d" class="figure">
 <p><object type="image/svg+xml" data="./imgs/haskell-logo.svg" class="org-svg" style="background-color: white;">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -926,7 +925,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section id="slide-3-1-1">
 <h4 id="3-1-1"><span class="section-number-4">3.1.1</span> how to learn Haskell</h4>
 
-<div id="org1aadb86" class="figure">
+<div id="org363b1c9" class="figure">
 <p><img src="./imgs/howtolearnhaskell.png" alt="howtolearnhaskell.png" />
 </p>
 </div>
@@ -935,13 +934,13 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section id="slide-3-1-2">
 <h4 id="3-1-2"><span class="section-number-4">3.1.2</span> learning curves for different programming languages</h4>
 
-<div id="org2c3a8d8" class="figure">
+<div id="org4c2e2e2" class="figure">
 <p><img src="./imgs/java.png" alt="java.png" class="fragment fade-in-then-out" />
 </p>
 </div>
 
 
-<div id="org2bacbbd" class="figure">
+<div id="org3717c47" class="figure">
 <p><img src="./imgs/haskell.png" alt="haskell.png" class="fragment" />
 </p>
 </div>
@@ -950,7 +949,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section>
 
 
-<div id="org570d9e3" class="figure">
+<div id="orga2aa0fb" class="figure">
 <p><img src="./imgs/learningcurve.jpg" alt="learningcurve.jpg" style="width: 70%;" />
 </p>
 </div>
@@ -959,7 +958,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section id="slide-3-1-3">
 <h4 id="3-1-3"><span class="section-number-4">3.1.3</span> code written in Haskell is guaranteed to have no side effects</h4>
 
-<div id="org5fc2864" class="figure">
+<div id="org1b235c5" class="figure">
 <p><img src="./imgs/haskell_2x.png" alt="haskell_2x.png" style="width: 30%;" />
 </p>
 </div>
@@ -971,7 +970,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <code>Real World Hashell</code>
 </p>
 
-<div id="org4518093" class="figure">
+<div id="org80d1e1c" class="figure">
 <p><img src="./imgs/realworldhaskell.jpg" alt="realworldhaskell.jpg" />
 </p>
 </div>
@@ -1044,7 +1043,7 @@ add1ThenMultiply2 = multiplier2 . adder1
 
 map plus1ThenMultiply2 [1, 2, 3]
 
-map (\i -&gt; ( i + 1) * 2) [1, 2, 3]
+map (\i -&gt; (i + 1) * 2) [1, 2, 3]
 </code></pre>
 </div>
 
@@ -1053,11 +1052,34 @@ map (\i -&gt; ( i + 1) * 2) [1, 2, 3]
 <h3 id="3-5"><span class="section-number-3">3.5</span> lazy</h3>
 <div class="org-src-container">
 
-<pre><code class="haskell" >fib = 0 : 1 : [ a+b | (a,b) &lt;- zip fib (tail fib) ]
+<pre><code class="haskell" >fib = 0 : 1 : [a+b | (a,b) &lt;- zip fib (tail fib)]
 
-take 11 fib
+take 10 fib
+-- [0,1,1,2,3,5,8,13,21,34]
+</code></pre>
+</div>
 
-fib !! 11
+<div class="org-src-container">
+
+<pre class="fragment (appear)"><code class="haskell" >0 : [1, 2]
+-- [0, 1, 2]
+
+tail [0, 1, 2]
+-- [1, 2]
+
+zip [0, 1, 2] ["zero", "one", "two"]
+-- [(0, "zero"), (1, "one"), (2, "tow")]
+</code></pre>
+</div>
+
+</section>
+<section>
+
+<div class="org-src-container">
+
+<pre><code class="haskell" >primes = filterPrime [2..]
+  where filterPrime (p:xs) =
+          p : filterPrime [x | x &lt;- xs, x `mod` p /= 0]
 </code></pre>
 </div>
 
@@ -1279,7 +1301,7 @@ Why Monad?
 </ol>
 
 
-<div id="orga00aad2" class="figure">
+<div id="org1eb2b0f" class="figure">
 <p><img src="./imgs/Functor-Applicative-Monad.png" alt="Functor-Applicative-Monad.png" />
 </p>
 </div>
@@ -1292,7 +1314,7 @@ Why Monad?
 <section id="slide-4">
 <h2 id="4"><span class="section-number-2">4</span> Haxl</h2>
 
-<div id="orgc5572f7" class="figure">
+<div id="orgf869748" class="figure">
 <p><img src="./imgs/haxl-logo.png" alt="haxl-logo.png" />
 </p>
 </div>
@@ -1376,12 +1398,12 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 
 </section>
 <section id="slide-4-2">
-<h3 id="4-2"><span class="section-number-3">4.2</span> make a plain</h3>
+<h3 id="4-2"><span class="section-number-3">4.2</span> make a plan</h3>
 <p>
 假设几个数据之间依赖关系如下：
 </p>
 
-<div id="orgaf20e13" class="figure">
+<div id="orga4144fb" class="figure">
 <p><img src="./imgs/deps.png" alt="deps.png" />
 </p>
 </div>
@@ -1393,7 +1415,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 一种资源获取/计算的执行计划可以如下：
 </p>
 
-<div id="org87c5e4b" class="figure">
+<div id="orga3096cd" class="figure">
 <p><img src="./imgs/schedule.png" alt="schedule.png" />
 </p>
 </div>
@@ -1402,7 +1424,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 <section id="slide-4-3">
 <h3 id="4-3"><span class="section-number-3">4.3</span> scala fetch</h3>
 
-<div id="org3e4a922" class="figure">
+<div id="org9540b5b" class="figure">
 <p><object type="image/svg+xml" data="./imgs/fetch-logo.svg" class="org-svg" style="background-color: white;">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -2117,7 +2139,7 @@ runFetch (Fetch h) = do
 </p>
 
 
-<div id="org3459113" class="figure">
+<div id="orgdaa2694" class="figure">
 <p><img src="./imgs/cover.jpg" alt="cover.jpg" />
 </p>
 </div>

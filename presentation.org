@@ -19,14 +19,16 @@
   * 纯函数、副作用、函子、应用函子、单子
 
 ** 费曼的彩虹
-
+   :PROPERTIES:
+   :reveal_extra_attr: data-background-image="./imgs/Richard-Feynman.jpg" data-background-opacity="0.2"
+   :END:
+   
    #+begin_quote
    “那你觉得彩虹的哪一个特色，让笛卡儿产生做数学分析的灵感？” \\
    “其实彩虹是圆锥体的一段，当水滴被来自观察者后方的光线照射时，会呈现出弧状的光谱颜色。我想他的灵感来自于他发现可以藉由思考单一的水滴，以及它的几何位置来分析这个问题。”\\
    #+end_quote
 
-   #+REVEAL: split
-
+   #+REVEAL: split :reveal_extra_attr: data-background-image="./imgs/CA-Feynman-2.jpg" data-background-opacity="0.2"
    #+begin_quote
    “我会说他的灵感来自于他认为彩虹很美。”\\
 
@@ -556,6 +558,9 @@
 
     
 *** Trampolines
+    :PROPERTIES:
+    :reveal_extra_attr: data-background-image="./imgs/trampoline_girls.jpg" data-background-opacity="0.2"
+    :END:
 
     [[./imgs/trampoline.png]]
 
@@ -683,6 +688,9 @@
     [[./imgs/trampoline-class.png]]
      
 * Haskell函数式编程语言
+  :PROPERTIES:
+  :reveal_extra_attr: data-background-iframe="https://www.haskell.org/" data-background-interactive data-background-opacity="0.2"
+  :END:
 
   #+ATTR_HTML: :style background-color: white;
   [[./imgs/haskell-logo.svg]]
@@ -790,17 +798,36 @@
 
    map plus1ThenMultiply2 [1, 2, 3]
 
-   map (\i -> ( i + 1) * 2) [1, 2, 3]
+   map (\i -> (i + 1) * 2) [1, 2, 3]
    #+end_src
 
 ** lazy
    
    #+begin_src haskell
-   fib = 0 : 1 : [ a+b | (a,b) <- zip fib (tail fib) ]
+   fib = 0 : 1 : [a+b | (a,b) <- zip fib (tail fib)]
 
-   take 11 fib
+   take 10 fib
+   -- [0,1,1,2,3,5,8,13,21,34]
+   #+end_src
 
-   fib !! 11
+   #+ATTR_REVEAL: :frag (appear)
+   #+begin_src haskell
+   0 : [1, 2]
+   -- [0, 1, 2]
+
+   tail [0, 1, 2]
+   -- [1, 2]
+
+   zip [0, 1, 2] ["zero", "one", "two"]
+   -- [(0, "zero"), (1, "one"), (2, "tow")]
+   #+end_src
+
+   #+REVEAL: split
+   
+   #+begin_src haskell
+   primes = filterPrime [2..]
+     where filterPrime (p:xs) =
+             p : filterPrime [x | x <- xs, x `mod` p /= 0]
    #+end_src
 
 ** handle side effect
@@ -1025,7 +1052,7 @@
    ["example content 1","example content 2","example content 3","example content 4","example content 5","example content 6","example content 7","example content 8","example content 9","example content 10","example content 11","example content 12"]
    #+end_src
 
-** make a plain
+** make a plan
 
    假设几个数据之间依赖关系如下：
    #+begin_src dot :exports results :file ./imgs/deps.png :cmdline -Kdot -Tpng :hidden
