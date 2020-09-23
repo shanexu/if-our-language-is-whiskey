@@ -17,6 +17,10 @@
   width: 100%;
 }
 
+#slide-2-2-8 code {
+  font-size: 0.98em;
+}
+
 #slide-2-4-1 + section + section div:first-child {
   position: relative;
 }
@@ -73,6 +77,16 @@
 }
 
 #slide-4-1 + section + section code {
+  white-space: pre-wrap;
+  max-height: unset;
+}
+
+#slide-4-3-1 + section code {
+  font-size: 0.96em;
+  max-height: unset;
+}
+
+#slide-4-3-1 + section + section + section + section code {
   max-height: unset;
 }
 

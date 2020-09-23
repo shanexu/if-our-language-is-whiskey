@@ -1029,7 +1029,8 @@
    #+end_src
 
    #+REVEAL: split
-   
+
+   #+ATTR_REVEAL: :code_attribs data-line-numbers
    #+begin_src text
    raw:
    select postid from postinfo;
@@ -1068,9 +1069,8 @@
 
    #+RESULTS:
    [[file:./imgs/deps.png]]
-   
-   #+REVEAL: split
 
+   #+ATTR_REVEAL: :frag t
    一种资源获取/计算的执行计划可以如下：
    #+begin_src dot :exports results :file ./imgs/schedule.png :cmdline -Kdot -Tpng :hidden
    digraph G {
@@ -1079,7 +1079,7 @@
      "D, E, F" -> "B, C" -> "A"
    }
    #+end_src
-
+   #+ATTR_REVEAL: :frag t
    #+RESULTS:
    [[file:./imgs/schedule.png]]
 
@@ -1091,44 +1091,32 @@
    [[https://github.com/47degrees/fetch]]
 
 *** 一个例子
-    
-    #+ATTR_REVEAL: :code_attribs data-line-numbers
+
     #+begin_src scala
-    package org.xusheng.ioliw
+    type NodeName = String
 
-    import cats.data.NonEmptyList
-    import cats.effect._
-    import cats.instances.list._
-    import cats.syntax.all._
-    import fetch._
+    case class Node(name: NodeName)
 
-    object sample {
-      type NodeName = String
+    case class Dep(name: NodeName, deps: List[NodeName])
 
-      case class Node(name: NodeName)
+    val nodeDatabase: Map[NodeName, Node] = Map(
+      "A" -> Node("A"),
+      "B" -> Node("B"),
+      "C" -> Node("C"),
+      "D" -> Node("D"),
+      "E" -> Node("E"),
+      "F" -> Node("F")
+    )
+    #+end_src
 
-      case class Dep(name: NodeName, deps: List[NodeName])
+    #+REVEAL: split
 
-      def latency[F[_] : Concurrent](msg: String): F[Unit] =
-        for {
-          _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
-          _ <- Sync[F].delay(Thread.sleep(1000))
-          _ <- Sync[F].delay(println(s"<-- [${Thread.currentThread.getId}] $msg"))
-        } yield ()
+    #+begin_src scala
+    object Nodes extends Data[NodeName, Node] {
+      def name = "Nodes"
 
-      val nodeDatabase: Map[NodeName, Node] = Map(
-        "A" -> Node("A"),
-        "B" -> Node("B"),
-        "C" -> Node("C"),
-        "D" -> Node("D"),
-        "E" -> Node("E"),
-        "F" -> Node("F")
-      )
-
-      object Nodes extends Data[NodeName, Node] {
-        def name = "Nodes"
-
-        def source[F[_] : ConcurrentEffect]: DataSource[F, NodeName, Node] = new DataSource[F, NodeName, Node] {
+      def source[F[_] : ConcurrentEffect]: DataSource[F, NodeName, Node] =
+        new DataSource[F, NodeName, Node] {
           override def data = Nodes
 
           override def CF = ConcurrentEffect[F]
@@ -1141,46 +1129,65 @@
           override def batchExecution: BatchExecution = InParallel
 
           override def batch(ids: NonEmptyList[NodeName]): F[Map[NodeName, Node]] =
-            latency[F](s"Batch Nodes $ids") >> CF.pure(nodeDatabase.filterKeys(ids.toList.toSet))
+            latency[F](s"Batch Nodes $ids") >>
+              CF.pure(nodeDatabase.filterKeys(ids.toList.toSet))
         }
-      }
-
-      def getNode[F[_] : ConcurrentEffect](id: NodeName): Fetch[F, Node] =
-        Fetch(id, Nodes.source)
-
-      def getGraph[F[_] : ConcurrentEffect](id: NodeName, deps: Map[NodeName, List[NodeName]]): Fetch[F, Node] =
-        for {
-          _ <- deps.get(id).map {
-            ids => ids.traverse(i => getGraph(i, deps))
-          }.getOrElse(Fetch.pure[F, List[Node]](List.empty))
-          n <- getNode(id)
-        } yield n
-
-      def main(args: Array[String]): Unit = {
-        import java.util.concurrent._
-
-        import scala.concurrent.ExecutionContext
-        import scala.concurrent.duration._
-
-        val executor = new ScheduledThreadPoolExecutor(4)
-        val executionContext: ExecutionContext = ExecutionContext.fromExecutor(executor)
-
-        implicit val timer: Timer[IO] = IO.timer(executionContext)
-        implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
-
-
-        val deps = Map(
-          "A" -> List("B", "C"),
-          "B" -> List("D", "E"),
-          "C" -> List("E", "F"),
-        )
-
-        Fetch.run[IO](getGraph("A", deps)).unsafeRunTimed(10.seconds)
-
-        executor.shutdown()
-      }
     }
     #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src scala
+    def latency[F[_] : Concurrent](msg: String): F[Unit] =
+      for {
+        _ <- Sync[F].delay(println(s"--> [${Thread.currentThread.getId}] $msg"))
+        _ <- Sync[F].delay(Thread.sleep(1000))
+        _ <- Sync[F].delay(println(s"<-- [${Thread.currentThread.getId}] $msg"))
+      } yield ()
+    #+end_src
+
+    #+REVEAL: split
+
+    #+begin_src scala
+    def getGraph[F[_] : ConcurrentEffect]
+      (id: NodeName, deps: Map[NodeName, List[NodeName]]): Fetch[F, Node] =
+      for {
+        _ <- deps.get(id).map {
+          ids => ids.traverse(i => getGraph(i, deps))
+        }.getOrElse(Fetch.pure[F, List[Node]](List.empty))
+        n <- getNode(id)
+      } yield n
+    #+end_src
+
+    #+REVEAL: split
+    
+    #+begin_src scala
+    def main(args: Array[String]): Unit = {
+      import java.util.concurrent._
+
+      import scala.concurrent.ExecutionContext
+      import scala.concurrent.duration._
+
+      val executor = new ScheduledThreadPoolExecutor(1)
+      val executionContext: ExecutionContext =
+        ExecutionContext.fromExecutor(executor)
+
+      implicit val timer: Timer[IO] = IO.timer(executionContext)
+      implicit val cs: ContextShift[IO] = IO.contextShift(executionContext)
+
+      val deps = Map(
+        "A" -> List("B", "C"),
+        "B" -> List("D", "E"),
+        "C" -> List("E", "F"),
+        )
+
+      Fetch.run[IO](getGraph("A", deps)).unsafeRunTimed(10.seconds)
+
+      executor.shutdown()
+    }
+    #+end_src
+
+    #+REVEAL: split
 
     #+begin_src text
     --> [19] Batch Nodes NonEmptyList(D, E, F)
