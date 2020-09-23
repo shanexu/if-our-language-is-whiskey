@@ -138,17 +138,17 @@
     #+ATTR_REVEAL: :frag frag-style
     #+begin_src java
     final List<String> uppercaseNames = new ArrayList<String>();
-    friends.forEach(name -> uppercaseNames.add(name.toUpperCase()));
+    friends.forEach(name -> uppercaseNames.add(name.toUpperCase()))
     #+end_src
 
     #+ATTR_REVEAL: :frag frag-style
     #+begin_src java
-    friends.stream().map(name -> name.toUpperCase());
+    friends.stream().map(name -> name.toUpperCase()).collect(Collectors.toList());
     #+end_src
 
     #+ATTR_REVEAL: :frag frag-style
     #+begin_src java
-    friends.stream().map(String::toUpperCase);
+    friends.stream().map(String::toUpperCase).collect(Collectors.toList());
     #+end_src
 
 *** Finding Elements
@@ -740,7 +740,7 @@
     [[./imgs/haskell_2x.png]]
 
 *** 我大概看了这本书十年
-    ~Real World Hashell~
+    ~Real World Haskell~
     #+ATTR_ORG: :width 400
     [[./imgs/realworldhaskell.jpg]]
 
@@ -1508,7 +1508,7 @@
     
     Concurrency monads A
     #+begin_src haskell
-    data Fetch a = Done a | Blocked (Fetch a) An
+    data Fetch a = Done a | Blocked (Fetch a)
     #+end_src
 
     #+ATTR_REVEAL: :frag fade-in-then-out

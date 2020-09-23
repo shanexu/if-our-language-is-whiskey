@@ -1,3 +1,7 @@
+#slide-2-1-2 + section code {
+  font-size: 0.99em;
+}
+
 #slide-2-1-4 + section + section + section div.org-src-container:first-child {
   position: relative;
 }
