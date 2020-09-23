@@ -795,6 +795,9 @@
    multiplier2 = multiply 2
 
    add1ThenMultiply2 = multiplier2 . adder1
+   -- f :: x -> y
+   -- g :: y -> z
+   -- g . f === \x -> g (f x)
 
    map plus1ThenMultiply2 [1, 2, 3]
 
