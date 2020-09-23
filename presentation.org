@@ -1,7 +1,7 @@
 #+TITLE:       如果我们的语言是威士忌——函数式编程初窥
 #+AUTHOR:      Xu Sheng
 #+EMAIL:       sheng.xu@sumscope.com
-#+DATE:        2020-09-12
+#+DATE:        2020-09-23
 #+OPTIONS:     toc:1 reveal_single_file:nil reveal_history:t reveal_width:1200 reveal_height:800
 
 #+REVEAL_ROOT:              ./reveal.js-4.0.2
