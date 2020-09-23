@@ -18,7 +18,7 @@
 <div class="reveal">
 <div class="slides">
 <section id="sec-title-slide">
-<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-23</h2><p class="date">Created: 2020-09-23 Wed 17:39</p>
+<h1 class="title">如果我们的语言是威士忌——函数式编程初窥</h1><h2 class="author">Xu Sheng</h2><h2 class="date">2020-09-23</h2><p class="date">Created: 2020-09-23 Wed 18:10</p>
 </section>
 <section id="table-of-contents-section">
 <div id="table-of-contents">
@@ -78,7 +78,7 @@
 <section id="slide-1-2">
 <h3 id="1-2"><span class="section-number-3">1.2</span> Lambda</h3>
 
-<div id="org4f42de3" class="figure">
+<div id="orga71f6f2" class="figure">
 <p><img src="./imgs/lambda_rainbow.png" alt="lambda_rainbow.png" style="width: 70%;" />
 </p>
 </div>
@@ -422,7 +422,7 @@ Java SE 8 introduces a new class called <code>java.util.Optional&lt;T&gt;</code>
 </p>
 
 
-<div id="org6bc70f7" class="figure">
+<div id="org3a0dd11" class="figure">
 <p><img src="./imgs/optional.gif" alt="optional.gif" />
 </p>
 </div>
@@ -495,7 +495,7 @@ public static Sheep mother(Sheep sheep) {
 <section id="slide-2-2-4">
 <h4 id="2-2-4"><span class="section-number-4">2.2.4</span> 定义函数曾曾曾&#x2026;&#x2026;&#x2026;.外祖父？</h4>
 
-<div id="org864b333" class="figure">
+<div id="orgb15811a" class="figure">
 <p><img src="./imgs/if-hell.jpeg" alt="if-hell.jpeg" class="fragment" />
 </p>
 </div>
@@ -664,7 +664,7 @@ $ gcc -S main.c -o main_no_tco.s
 </div>
 
 
-<div id="org3a3fd2c" class="figure">
+<div id="org0df2302" class="figure">
 <p><img src="./imgs/Xnip2020-06-03_13-55-16.png" alt="Xnip2020-06-03_13-55-16.png" class="fragment fade-in-then-out" />
 </p>
 </div>
@@ -737,7 +737,7 @@ public class NoTCO {
 <section id="slide-2-4-3" data-background-image="./imgs/trampoline_girls.jpg" data-background-opacity="0.2">
 <h4 id="2-4-3"><span class="section-number-4">2.4.3</span> Trampolines</h4>
 
-<div id="org504cd8a" class="figure">
+<div id="org2b15353" class="figure">
 <p><img src="./imgs/trampoline.png" alt="trampoline.png" />
 </p>
 </div>
@@ -879,7 +879,7 @@ public static void main(String[] args) {
 <section>
 
 
-<div id="orga3b7bbb" class="figure">
+<div id="orgc328143" class="figure">
 <p><img src="./imgs/trampoline-class.png" alt="trampoline-class.png" />
 </p>
 </div>
@@ -890,7 +890,7 @@ public static void main(String[] args) {
 <section id="slide-3" data-background-iframe="https://www.haskell.org/" data-background-interactive data-background-opacity="0.2">
 <h2 id="3"><span class="section-number-2">3</span> Haskell函数式编程语言</h2>
 
-<div id="orge797751" class="figure">
+<div id="org874fd47" class="figure">
 <p><object type="image/svg+xml" data="./imgs/haskell-logo.svg" class="org-svg" style="background-color: white;">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -925,7 +925,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section id="slide-3-1-1">
 <h4 id="3-1-1"><span class="section-number-4">3.1.1</span> how to learn Haskell</h4>
 
-<div id="org90f8e98" class="figure">
+<div id="org36ad98e" class="figure">
 <p><img src="./imgs/howtolearnhaskell.png" alt="howtolearnhaskell.png" />
 </p>
 </div>
@@ -934,13 +934,13 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section id="slide-3-1-2">
 <h4 id="3-1-2"><span class="section-number-4">3.1.2</span> learning curves for different programming languages</h4>
 
-<div id="orgd7ccf0a" class="figure">
+<div id="org60ee2b5" class="figure">
 <p><img src="./imgs/java.png" alt="java.png" class="fragment fade-in-then-out" />
 </p>
 </div>
 
 
-<div id="org474161b" class="figure">
+<div id="org4f87acf" class="figure">
 <p><img src="./imgs/haskell.png" alt="haskell.png" class="fragment" />
 </p>
 </div>
@@ -949,7 +949,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section>
 
 
-<div id="org8fa68b9" class="figure">
+<div id="orgde6d9b4" class="figure">
 <p><img src="./imgs/learningcurve.jpg" alt="learningcurve.jpg" style="width: 70%;" />
 </p>
 </div>
@@ -958,7 +958,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <section id="slide-3-1-3">
 <h4 id="3-1-3"><span class="section-number-4">3.1.3</span> code written in Haskell is guaranteed to have no side effects</h4>
 
-<div id="orgfd98263" class="figure">
+<div id="org4e1b83b" class="figure">
 <p><img src="./imgs/haskell_2x.png" alt="haskell_2x.png" style="width: 30%;" />
 </p>
 </div>
@@ -970,7 +970,7 @@ quicksort (p:xs) = (quicksort lesser) ++ [p] ++ (quicksort greater)
 <code>Real World Haskell</code>
 </p>
 
-<div id="org2b1c750" class="figure">
+<div id="org93fc590" class="figure">
 <p><img src="./imgs/realworldhaskell.jpg" alt="realworldhaskell.jpg" />
 </p>
 </div>
@@ -1304,12 +1304,32 @@ Why Monad?
 </ol>
 
 
-<div id="org7612af2" class="figure">
+<div id="org5e2e2d3" class="figure">
 <p><img src="./imgs/Functor-Applicative-Monad.png" alt="Functor-Applicative-Monad.png" />
 </p>
 </div>
 
+</section>
+<section>
 
+<p>
+Function is a Monad
+</p>
+
+<div class="org-src-container">
+
+<pre><code class="haskell" >f :: x -&gt; a -- F a
+
+fmap :: (a -&gt; b) -&gt; (x -&gt; a) -&gt; (x -&gt; b)
+fmap    f           g        =  \x -&gt; f (g x)
+
+(&lt;*&gt;) :: (x -&gt; (a -&gt; b)) -&gt; (x -&gt; a) -&gt; (x -&gt; b)
+(&lt;*&gt;)    f                  g        =  \x -&gt; (f x) (g x)
+
+(&gt;&gt;=) :: (a -&gt; (x -&gt; b)) -&gt; (x -&gt; a) -&gt; (x -&gt; b)
+(&gt;&gt;=)    f                  g        =  \x -&gt; f (g x)
+</code></pre>
+</div>
 
 </section>
 </section>
@@ -1317,7 +1337,7 @@ Why Monad?
 <section id="slide-4">
 <h2 id="4"><span class="section-number-2">4</span> Haxl</h2>
 
-<div id="orge7268f2" class="figure">
+<div id="org0a49c3e" class="figure">
 <p><img src="./imgs/haxl-logo.png" alt="haxl-logo.png" />
 </p>
 </div>
@@ -1406,7 +1426,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 假设几个数据之间依赖关系如下：
 </p>
 
-<div id="orgba6c94a" class="figure">
+<div id="orgbb166b3" class="figure">
 <p><img src="./imgs/deps.png" alt="deps.png" />
 </p>
 </div>
@@ -1415,7 +1435,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 一种资源获取/计算的执行计划可以如下：
 </p>
 
-<div id="org2a36151" class="figure">
+<div id="orgfd6201e" class="figure">
 <p><img src="./imgs/schedule.png" alt="schedule.png" class="fragment" />
 </p>
 </div>
@@ -1424,7 +1444,7 @@ select postid,content from postcontent where postid in (12,11,10,9,8,7,6,5,4,3,2
 <section id="slide-4-3">
 <h3 id="4-3"><span class="section-number-3">4.3</span> scala fetch</h3>
 
-<div id="orgb4c1f23" class="figure">
+<div id="org15d40b4" class="figure">
 <p><object type="image/svg+xml" data="./imgs/fetch-logo.svg" class="org-svg" style="background-color: white;">
 Sorry, your browser does not support SVG.</object>
 </p>
@@ -2180,7 +2200,7 @@ runFetch (Fetch h) = do
 </p>
 
 
-<div id="org0fe9f22" class="figure">
+<div id="org485df18" class="figure">
 <p><img src="./imgs/cover.jpg" alt="cover.jpg" />
 </p>
 </div>
