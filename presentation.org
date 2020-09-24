@@ -857,7 +857,7 @@
     #+begin_src haskell
     class (Functor f) => Applicative f where
         pure  :: a -> f a
-        (<*>) :: f (a -> b) -> f a -> f b'
+        (<*>) :: f (a -> b) -> f a -> f b
     #+end_src
 
 *** Monad
